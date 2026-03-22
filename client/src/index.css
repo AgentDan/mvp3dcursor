@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap");
+@import "tailwindcss";
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+}
+
+body {
+  display: flex;
+  min-width: 320px;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+a,
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+/* Three.js canvas внутри контейнера */
+.configurator-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
