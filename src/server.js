@@ -1,7 +1,8 @@
-require('dotenv').config();
+// require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const express = require('express');
-const path = require('path');
 const connectDB = require('./services/db');
 const { authRouter } = require('./features/auth');
 const { adminRouter } = require('./features/admin');
@@ -9,7 +10,7 @@ const { modelsRouter } = require('./features/models');
 const { s3Router } = require('./features/cloudR2');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 app.use(express.json());
 
@@ -34,20 +35,20 @@ app.use('/api/models', modelsRouter);
 app.use('/api/s3', s3Router);
 
 // В продакшене раздаём собранный фронтенд (Vite) из client/dist
-const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+const clientDistPath = path.join(__dirname, '../client/dist');
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(clientDistPath));
-  app.get('*', (req, res) =>
-    res.sendFile(path.resolve(clientDistPath, 'index.html'))
+  app.get('/{*splat}', (req, res) =>
+    res.sendFile(path.join(clientDistPath, 'index.html'))
   );
 } else {
-  app.get('/', (req, res) => res.send('Please set to production'));
+  app.get('/{*splat}', (req, res) => res.send('Please set to production'));
 }
 
 async function start() {
   await connectDB();
-  app.listen(port);
+  app.listen(PORT);
 }
 
 start().catch((err) => {
