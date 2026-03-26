@@ -8,11 +8,6 @@ build/
 *.local
 client/.vite/
 
-# Environment & secrets
-.env
-.env.*
-!.env.example
-
 # Logs & debug
 logs/
 *.log
