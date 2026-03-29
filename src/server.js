@@ -3,6 +3,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const express = require('express');
+const http = require(`http`);
 const connectDB = require('./services/db');
 const { authRouter } = require('./features/auth');
 const { adminRouter } = require('./features/admin');
