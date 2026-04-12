@@ -1,5 +1,6 @@
 # Dependencies (no leading slash → matches at any depth: ./, client/, …)
 node_modules/
+.env
 
 # Build / bundler
 dist/
