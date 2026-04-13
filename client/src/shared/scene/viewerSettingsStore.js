@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 
 const DEFAULT_SETTINGS = {
   backgroundColor: '#1a1a2e',

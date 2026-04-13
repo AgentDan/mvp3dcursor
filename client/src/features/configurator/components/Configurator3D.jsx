@@ -44,9 +44,9 @@ export function Configurator3D() {
           <ConfiguratorScene modelKey={modelKey} requestId={modelRequestId} />
         </Canvas>
         <ConfiguratorModelsPanel />
+        <PanelLabPanel />
         <VariantsPanel />
       </div>
-      <PanelLabPanel />
     </div>
   );
 }

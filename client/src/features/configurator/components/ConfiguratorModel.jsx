@@ -49,11 +49,11 @@ export function ConfiguratorModel({ modelKey, requestId }) {
 
     if (extrasPanelLab && typeof extrasPanelLab === 'object') {
       // eslint-disable-next-line no-console
-      console.log('[Configurator] PanelLab environment for model', modelKey, extrasPanelLab);
+      //console.log('[Configurator] PanelLab environment for model', modelKey, extrasPanelLab);
       hydrateFromPanelLab(extrasPanelLab);
     } else {
       // eslint-disable-next-line no-console
-      console.log('[Configurator] No PanelLab extras for model', modelKey);
+      //console.log('[Configurator] No PanelLab extras for model', modelKey);
     }
   }, [gltf, hydrateFromPanelLab, modelKey, modelRequestId, resetViewerToDefaults, requestId]);
 

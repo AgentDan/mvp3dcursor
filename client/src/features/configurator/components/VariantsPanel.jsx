@@ -23,7 +23,7 @@ const panelChromeCollapsed =
 
 export function VariantsPanel() {
   const { groupOptions, selection, setSelection } = useConfigurator();
-  const [panelExpanded, setPanelExpanded] = useState(true);
+  const [panelExpanded, setPanelExpanded] = useState(false);
 
   const entries = Object.entries(groupOptions).sort(([a], [b]) => Number(a) - Number(b));
 
