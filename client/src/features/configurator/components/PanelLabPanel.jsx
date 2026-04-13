@@ -11,41 +11,16 @@ export function PanelLabPanel() {
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState(null);
 
-  const {
-    backgroundColor,
-    exposure,
-    ambientIntensity,
-    directionalIntensity,
-    minDistance,
-    maxDistance,
-    dampingFactor,
-    cameraFov,
-    setBackgroundColor,
-    setExposure,
-    setAmbientIntensity,
-    setDirectionalIntensity,
-    setMinDistance,
-    setMaxDistance,
-    setDampingFactor,
-    setCameraFov,
-  } = useViewerSettingsStore(
+  const labSlice = useViewerSettingsStore(
     useShallow((s) => ({
-      backgroundColor: s.backgroundColor,
-      exposure: s.exposure,
-      ambientIntensity: s.ambientIntensity,
-      directionalIntensity: s.directionalIntensity,
-      minDistance: s.minDistance,
-      maxDistance: s.maxDistance,
-      dampingFactor: s.dampingFactor,
-      cameraFov: s.cameraFov,
-      setBackgroundColor: s.setBackgroundColor,
-      setExposure: s.setExposure,
-      setAmbientIntensity: s.setAmbientIntensity,
-      setDirectionalIntensity: s.setDirectionalIntensity,
-      setMinDistance: s.setMinDistance,
-      setMaxDistance: s.setMaxDistance,
-      setDampingFactor: s.setDampingFactor,
-      setCameraFov: s.setCameraFov,
+      panelLab: s.panelLab,
+      patchEnvironment: s.patchEnvironment,
+      patchLighting: s.patchLighting,
+      patchGround: s.patchGround,
+      patchRenderer: s.patchRenderer,
+      patchPostprocessing: s.patchPostprocessing,
+      patchCamera: s.patchCamera,
+      patchControls: s.patchControls,
     })),
   );
 
@@ -66,18 +41,7 @@ export function PanelLabPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           key: labKey,
-          settings: {
-            backgroundColor: s.backgroundColor,
-            exposure: s.exposure,
-            ambientIntensity: s.ambientIntensity,
-            directionalIntensity: s.directionalIntensity,
-            directionalPosition: s.directionalPosition,
-            minDistance: s.minDistance,
-            maxDistance: s.maxDistance,
-            dampingFactor: s.dampingFactor,
-            cameraPosition: s.cameraPosition,
-            cameraFov: s.cameraFov,
-          },
+          panelLab: s.panelLab,
         }),
       });
 
@@ -118,7 +82,7 @@ export function PanelLabPanel() {
         onClick={() => setPanelExpanded((v) => !v)}
         aria-expanded={panelExpanded}
         aria-controls="panel-lab-panel-body"
-        aria-label={panelExpanded ? 'Свернуть панель Lab' : 'Развернуть панель Lab'}
+        aria-label={panelExpanded ? 'Collapse Panel Lab' : 'Expand Panel Lab'}
         className={`
           flex shrink-0 items-center justify-center focus:outline-none focus-visible:ring-2
           ${panelExpanded
@@ -144,25 +108,7 @@ export function PanelLabPanel() {
 
       {panelExpanded ? (
         <>
-          <PanelLabPanelBody
-            labKey={labKey}
-            backgroundColor={backgroundColor}
-            setBackgroundColor={setBackgroundColor}
-            exposure={exposure}
-            setExposure={setExposure}
-            ambientIntensity={ambientIntensity}
-            setAmbientIntensity={setAmbientIntensity}
-            directionalIntensity={directionalIntensity}
-            setDirectionalIntensity={setDirectionalIntensity}
-            minDistance={minDistance}
-            maxDistance={maxDistance}
-            dampingFactor={dampingFactor}
-            setMinDistance={setMinDistance}
-            setMaxDistance={setMaxDistance}
-            setDampingFactor={setDampingFactor}
-            cameraFov={cameraFov}
-            setCameraFov={setCameraFov}
-          />
+          <PanelLabPanelBody labKey={labKey} {...labSlice} />
           <PanelLabSaveSection labKey={labKey} isSaving={isSaving} onSave={handleSave} status={status} />
         </>
       ) : null}

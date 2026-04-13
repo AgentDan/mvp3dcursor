@@ -5,9 +5,9 @@ import { create } from 'zustand';
  */
 
 /**
- * Состояние конфигуратора (только выбор вариантов).
+ * Configurator UI state (variant selection only).
  *
- * sceneData хранится в общем useSceneStore и переиспользуется Panel Lab.
+ * `sceneData` lives in `useSceneStore` and is shared with Panel Lab.
  *
  * @type {import('zustand').Store<{
  *   selection: Selection,

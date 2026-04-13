@@ -15,7 +15,7 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 
-// CORS для клиента (Vite на другом порту в dev)
+// CORS for the client (Vite runs on a different port in dev)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
@@ -24,18 +24,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Статика GLTF-моделей (папка gltf/)
+// Static GLTF models (gltf/ folder)
 app.use('/gltf', express.static(path.join(__dirname, '..', 'gltf')));
-// API авторизации (регистрация, вход)
+// Auth API (register, login)
 app.use('/api/auth', authRouter);
-// API для админки
+// Admin API
 app.use('/api/admin', adminRouter);
-// API для списка 3D-моделей (папка gltf/)
+// 3D model list API (gltf/ folder)
 app.use('/api/models', modelsRouter);
 // API S3/R2 (Cloudflare R2)
 app.use('/api/s3', s3Router);
 
-// В продакшене раздаём собранный фронтенд (Vite) из client/dist
+// In production, serve the built Vite app from client/dist
 const clientDistPath = path.join(__dirname, '../client/dist');
 
 if (process.env.NODE_ENV === 'production') {

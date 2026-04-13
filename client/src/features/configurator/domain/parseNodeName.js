@@ -1,6 +1,6 @@
 /**
- * Разбирает имя узла в доменную структуру. Чистая функция, без побочных эффектов.
- * Конвенция: default_* = всегда видно; XY_Label = группа X, вариант Y (например, 11_Cone).
+ * Parse a node name into domain shape (pure).
+ * Convention: `default_*` = always visible; `XY_Label` = group X, variant Y (e.g. 11_Cone).
  *
  * @param {string} [name]
  * @returns {import('./types.js').ParsedNodeName}

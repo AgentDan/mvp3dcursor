@@ -1,44 +1,41 @@
 import { create } from 'zustand';
-import { useShallow } from 'zustand/react/shallow';
+import {
+  cloneDefaultPanelLab,
+  deepMerge,
+  normalizePanelLabToEmbedded,
+} from '@repo/panelLabSchema';
 
-const DEFAULT_SETTINGS = {
-  backgroundColor: '#1a1a2e',
-  exposure: 1.0,
-  ambientIntensity: 0.6,
-  directionalIntensity: 0.8,
-  directionalPosition: [5, 8, 5],
-  minDistance: 2.0,
-  maxDistance: 10.0,
-  dampingFactor: 0.05,
-  cameraPosition: [4, 3, 4],
-  cameraFov: 50,
-};
+function patchTopSection(set, key, partial) {
+  set((s) => ({
+    panelLab: normalizePanelLabToEmbedded(
+      deepMerge(s.panelLab, {
+        [key]: deepMerge(s.panelLab[key], partial),
+      }),
+    ),
+  }));
+}
 
-/**
- * Общие настройки вьюера/сцены, которыми управляет Panel Lab.
- * Эти параметры используются в ConfiguratorScene и могут быть изменены админом.
- */
+/** Scene settings: extras.panelLab, version 1 (environment, lighting, ground, renderer, postprocessing, camera, controls). */
 export const useViewerSettingsStore = create((set) => ({
-  ...DEFAULT_SETTINGS,
+  panelLab: cloneDefaultPanelLab(),
 
-  setBackgroundColor: (backgroundColor) => set({ backgroundColor }),
-  setExposure: (exposure) => set({ exposure }),
-  setAmbientIntensity: (ambientIntensity) => set({ ambientIntensity }),
-  setDirectionalIntensity: (directionalIntensity) => set({ directionalIntensity }),
-  setDirectionalPosition: (directionalPosition) => set({ directionalPosition }),
-  setMinDistance: (minDistance) => set({ minDistance }),
-  setMaxDistance: (maxDistance) => set({ maxDistance }),
-  setDampingFactor: (dampingFactor) => set({ dampingFactor }),
-  setCameraPosition: (cameraPosition) => set({ cameraPosition }),
-  setCameraFov: (cameraFov) => set({ cameraFov }),
+  setPanelLab: (panelLab) =>
+    set(() => ({
+      panelLab: normalizePanelLabToEmbedded(panelLab),
+    })),
 
-  /** Сброс к дефолтам (при открытии нового файла в Lab, чтобы не тянуть кэш от предыдущего). */
-  resetToDefaults: () => set((state) => ({ ...state, ...DEFAULT_SETTINGS })),
+  patchEnvironment: (partial) => patchTopSection(set, 'environment', partial),
+  patchLighting: (partial) => patchTopSection(set, 'lighting', partial),
+  patchGround: (partial) => patchTopSection(set, 'ground', partial),
+  patchRenderer: (partial) => patchTopSection(set, 'renderer', partial),
+  patchPostprocessing: (partial) => patchTopSection(set, 'postprocessing', partial),
+  patchCamera: (partial) => patchTopSection(set, 'camera', partial),
+  patchControls: (partial) => patchTopSection(set, 'controls', partial),
 
-  hydrateFromPanelLab: (panelLab) =>
-    set((state) => ({
-      ...state,
-      ...panelLab,
+  resetToDefaults: () => set(() => ({ panelLab: cloneDefaultPanelLab() })),
+
+  hydrateFromPanelLab: (raw) =>
+    set(() => ({
+      panelLab: normalizePanelLabToEmbedded(raw),
     })),
 }));
-

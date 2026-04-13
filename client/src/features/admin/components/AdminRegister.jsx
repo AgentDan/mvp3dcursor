@@ -43,7 +43,7 @@ export function AdminRegister() {
 
   const handleDelete = async (user) => {
     if (!user.id) return;
-    if (!window.confirm(`Удалить пользователя "${user.nickname}"?`)) return;
+    if (!window.confirm(`Delete user "${user.nickname}"?`)) return;
     try {
       const res = await fetch(`${API_BASE}/users/${encodeURIComponent(user.id)}`, {
         method: 'DELETE',
@@ -66,12 +66,8 @@ export function AdminRegister() {
             <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-cyan-300 to-fuchsia-400" />
             <span className="text-xs text-white/70">Users</span>
           </div>
-          <h1 className="text-xl md:text-2xl font-semibold tracking-tight mt-3">
-            Пользователи и администраторы
-          </h1>
-          <p className="text-xs text-white/50 mt-1">
-            Поиск, фильтры и удаление пользователей.
-          </p>
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight mt-3">Users and administrators</h1>
+          <p className="text-xs text-white/50 mt-1">Search, filter, and remove accounts.</p>
         </div>
       </div>
 
@@ -88,16 +84,16 @@ export function AdminRegister() {
           <div className="relative">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-3">
               <div>
-                <div className="text-sm font-semibold tracking-tight">Список</div>
+                <div className="text-sm font-semibold tracking-tight">Directory</div>
                 <div className="text-xs text-white/50 mt-1">
-                  Быстро находите нужные аккаунты по nickname/login/email.
+                  Find accounts by nickname, login, or email.
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 <div>
                   <label className="block text-xs mb-1 text-white/60" htmlFor="users-search">
-                    Поиск
+                    Search
                   </label>
                   <input
                     id="users-search"
@@ -105,23 +101,29 @@ export function AdminRegister() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="nickname, login, email"
-                    className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/90 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-100 border border-slate-600/90 text-xs placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1 text-white/60" htmlFor="users-role-filter">
-                    Роль
+                    Role
                   </label>
                   <select
                     id="users-role-filter"
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/90 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-100 border border-slate-600/90 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
                   >
-                    <option value="all">Все</option>
-                    <option value="user">Пользователь</option>
-                    <option value="administrator">Администратор</option>
+                    <option value="all" className="bg-slate-900 text-slate-100">
+                      All
+                    </option>
+                    <option value="user" className="bg-slate-900 text-slate-100">
+                      User
+                    </option>
+                    <option value="administrator" className="bg-slate-900 text-slate-100">
+                      Administrator
+                    </option>
                   </select>
                 </div>
 
@@ -132,7 +134,7 @@ export function AdminRegister() {
                     disabled={isLoading}
                     className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-60 border border-white/10 text-xs text-white/80 backdrop-blur-xl shadow-inner shadow-black/20"
                   >
-                    {isLoading ? 'Обновление…' : 'Обновить'}
+                    {isLoading ? 'Refreshing…' : 'Refresh'}
                   </button>
                 </div>
               </div>
@@ -140,34 +142,34 @@ export function AdminRegister() {
 
             {error && <p className="text-xs text-red-200 mb-2">{error}</p>}
 
-            <div className="overflow-auto rounded-2xl border border-white/10 bg-white/5">
+            <div className="overflow-auto rounded-2xl border border-white/10 bg-slate-950/40">
               <table className="min-w-full text-xs">
-                <thead className="bg-white/5">
+                <thead className="bg-slate-900/50">
                   <tr>
-                    <th className="text-left px-2 py-2 border-b border-white/10 text-white/70">Никнейм</th>
-                    <th className="text-left px-2 py-2 border-b border-white/10 text-white/70">Роль</th>
-                    <th className="text-right px-2 py-2 border-b border-white/10 text-white/70">Действия</th>
+                    <th className="text-left px-2 py-2 border-b border-white/10 text-slate-200">Nickname</th>
+                    <th className="text-left px-2 py-2 border-b border-white/10 text-slate-200">Role</th>
+                    <th className="text-right px-2 py-2 border-b border-white/10 text-slate-200">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-3 py-6 text-center text-white/50">
-                        {isLoading ? 'Загрузка пользователей…' : 'Пользователи не найдены.'}
+                      <td colSpan={3} className="px-3 py-6 text-center text-slate-400">
+                        {isLoading ? 'Loading users…' : 'No users found.'}
                       </td>
                     </tr>
                   ) : (
                     filteredUsers.map((u) => (
                       <tr key={u.id || u.nickname} className="hover:bg-white/5">
-                        <td className="px-2 py-2 border-t border-white/10 text-white/80">
+                        <td className="px-2 py-2 border-t border-white/10 text-slate-100 font-medium">
                           {u.nickname || '—'}
                         </td>
-                        <td className="px-2 py-2 border-t border-white/10 text-white/70">
+                        <td className="px-2 py-2 border-t border-white/10 text-slate-200">
                           {u.role === 'administrator'
-                            ? 'Администратор'
+                            ? 'Administrator'
                             : u.role === 'user'
-                              ? 'Пользователь'
-                              : u.role || 'Пользователь'}
+                              ? 'User'
+                              : u.role || 'User'}
                         </td>
                         <td className="px-2 py-2 border-t border-white/10 text-right">
                           <button
@@ -175,7 +177,7 @@ export function AdminRegister() {
                             onClick={() => handleDelete(u)}
                             className="px-3 py-1 rounded-xl bg-red-500/10 hover:bg-red-500/15 border border-red-400/25 text-[11px] text-red-100 shadow-inner shadow-black/20"
                           >
-                            Удалить
+                            Delete
                           </button>
                         </td>
                       </tr>

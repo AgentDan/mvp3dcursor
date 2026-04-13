@@ -12,8 +12,7 @@ function App() {
   const location = useLocation();
   const prevLocationRef = useRef({ pathname: location.pathname, search: location.search });
 
-  // Удаляем временный файл Lab только при уходе со страницы конфигуратора (смена маршрута),
-  // а не при размонтировании панели (Strict Mode / перемонтирование).
+  // Drop Lab temp file only when leaving the configurator route, not when a child unmounts (Strict Mode).
   useEffect(() => {
     const prev = prevLocationRef.current;
     const currPath = location.pathname;

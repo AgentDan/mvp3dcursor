@@ -8,14 +8,14 @@ const TITLES = {
   '/register': 'Register',
 };
 
-/** Обычные страницы — та же палитра, что у боковой панели выбора модели. */
+/** Standard pages: same chrome as the model picker rail. */
 const headerBar =
   'bg-gray-400 text-gray-950 border-b border-gray-500';
 const navLink =
   'text-sm text-gray-800 hover:text-gray-950 transition-colors';
 const navMuted = 'text-sm text-gray-800';
 
-/** Над полноэкранным 3D: прозрачность + размытие, светлый текст. */
+/** Over full-viewport 3D: blur + translucency, light nav text. */
 const overlayBar =
   'absolute top-0 left-0 right-0 z-40 pointer-events-auto ' +
   'bg-gray-400/25 backdrop-blur-md backdrop-saturate-150 ' +

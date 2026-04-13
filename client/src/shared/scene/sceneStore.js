@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 
 /**
- * Хранилище общих данных 3D‑сцены.
+ * Shared 3D scene data store.
  *
- * SceneData переиспользуется между Configurator и Panel Lab.
+ * SceneData is shared between Configurator and Panel Lab.
  *
  * @typedef {import('../../features/configurator/application/buildConfiguration.js').SceneData} SceneData
  */
@@ -12,8 +12,7 @@ export const useSceneStore = create((set) => ({
   /** @type {SceneData | null} */
   sceneData: null,
   /**
-   * Уникальный id последнего запроса на загрузку модели в конфигураторе.
-   * Нужен, чтобы устаревшие загрузки не перезаписывали состояние.
+   * Id of the latest model load request in the configurator (stale responses ignored).
    * @type {number}
    */
   modelRequestId: 0,
@@ -22,7 +21,7 @@ export const useSceneStore = create((set) => ({
   /** @param {number} id */
   setModelRequestId: (id) => set({ modelRequestId: id }),
   /**
-   * Поставить sceneData только если это "текущий" запрос на загрузку.
+   * Set sceneData only when `id` matches the latest model request.
    * @param {number} id
    * @param {SceneData | null} data
    */

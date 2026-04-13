@@ -65,11 +65,11 @@ function NavIcon({ name }) {
 }
 
 const nav = [
-  { to: '/admin', label: 'Панель', icon: 'dashboard' },
-  { to: '/admin/register', label: 'Пользователи', icon: 'users' },
-  { to: '/admin/models', label: 'Библиотека 3D', icon: 'library' },
-  { to: '/', label: 'Главная', icon: 'home' },
-  { to: '/configurator', label: 'Конфигуратор', icon: 'configurator' },
+  { to: '/admin', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/admin/register', label: 'Users', icon: 'users' },
+  { to: '/admin/models', label: '3D Library', icon: 'library' },
+  { to: '/', label: 'Home', icon: 'home' },
+  { to: '/configurator', label: 'Configurator', icon: 'configurator' },
 ];
 
 export function AdminLayout() {
@@ -78,7 +78,7 @@ export function AdminLayout() {
 
   return (
     <div className="relative min-h-screen flex flex-col md:flex-row bg-slate-950 text-slate-100 overflow-hidden">
-      {/* Жидкий фон */}
+      {/* Liquid-style background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-44 -left-44 w-96 h-96 rounded-full bg-fuchsia-500/20 blur-3xl" />
         <div className="absolute top-24 -right-56 w-[28rem] h-[28rem] rounded-full bg-cyan-400/18 blur-3xl" />
@@ -88,7 +88,7 @@ export function AdminLayout() {
 
       <div className="relative z-0 w-full max-w-7xl mx-auto my-6 md:my-10 px-3">
         <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_30px_90px_-40px_rgba(0,0,0,0.85)] shadow-black/40 overflow-hidden">
-          {/* Сияние */}
+          {/* Glow */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -top-28 -left-20 w-[22rem] h-[22rem] rounded-full bg-fuchsia-400/10 blur-3xl" />
             <div className="absolute top-16 right-[-8rem] w-[26rem] h-[26rem] rounded-full bg-cyan-300/10 blur-3xl" />
@@ -138,7 +138,7 @@ export function AdminLayout() {
                       {activeNav?.label || 'Admin'}
                     </h1>
                     <div className="text-xs text-white/50 mt-1">
-                      Интеграция в стиле “glass” только на Tailwind.
+                      Glass-style UI built with Tailwind only.
                     </div>
                   </div>
                   <div className="hidden sm:flex items-center gap-2">

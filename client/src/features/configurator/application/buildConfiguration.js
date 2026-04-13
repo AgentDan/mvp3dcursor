@@ -1,7 +1,7 @@
 import { traverseSceneAndBuildRawGroups } from '../infrastructure/sceneTraverse.js';
 
 /**
- * Данные сцены: единый источник правды для структуры сцены. Содержит ссылки на узлы Three.js.
+ * Scene data: single source of truth for structure; holds Three.js node refs.
  *
  * @typedef {Object} SceneData
  * @property {import('three').Object3D[]} defaultNodes
@@ -9,7 +9,7 @@ import { traverseSceneAndBuildRawGroups } from '../infrastructure/sceneTraverse.
  */
 
 /**
- * Формирует данные сцены из сцены Three.js.
+ * Build scene data from a Three.js scene root.
  *
  * @param {import('three').Object3D} scene
  * @returns {{ sceneData: SceneData }}

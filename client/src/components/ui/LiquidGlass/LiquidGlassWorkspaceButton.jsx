@@ -62,8 +62,8 @@ radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.18)_0%,transparent_50%)]
 `;
 
 /**
- * Стеклянная кнопка-строка с переключаемым индикатором (галочка / пустое кольцо).
- * Режимы: неконтролируемый (`defaultChecked`), контролируемый (`checked` + `onCheckedChange`).
+ * Glass row button with a toggle indicator (check / empty ring).
+ * Uncontrolled (`defaultChecked`) or controlled (`checked` + `onCheckedChange`).
  *
  * @param {{
  *   tune?: typeof DEFAULT_LIQUID_GLASS_WORKSPACE_TUNE,
@@ -141,7 +141,7 @@ export function LiquidGlassWorkspaceButton({
     borderRadius: d.radius,
   };
 
-  /** Без filter на кнопке: saturate/… давали разную «высоту» active vs passive. */
+  /** No filter on the button row: saturate/etc. skewed active vs idle height. */
   const rowMinHeight = d.padY * 2 + d.check + d.borderW * 2;
 
   return (

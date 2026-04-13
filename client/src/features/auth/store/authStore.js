@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 /**
- * Store авторизации: текущий пользователь и выход.
+ * Auth store: current user and logout.
  * user: { id, nickname, role } | null
  */
 export const useAuthStore = create(

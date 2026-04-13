@@ -1,6 +1,6 @@
 const s3Service = require('../services/s3Service');
 const User = require('../../auth/user.model');
-const { createModel } = require('../../models/service');
+const { createModel, deleteModelByS3Key } = require('../../models/service');
 
 function getDefaultBucket() {
   return process.env.BUCKET_NAME;
@@ -85,7 +85,19 @@ async function remove(req, res) {
   const key = decodeURIComponent(req.params.key);
   try {
     await s3Service.deleteObject(bucket, key);
-    res.json({ deleted: key });
+    let dbRemoved = false;
+    try {
+      const { deletedCount } = await deleteModelByS3Key(key);
+      dbRemoved = deletedCount > 0;
+    } catch (dbErr) {
+      console.error('S3 object deleted but Model3D DB delete failed:', dbErr.message);
+      return res.status(200).json({
+        deleted: key,
+        dbRemoved: false,
+        warning: 'File removed from S3 but the database record could not be deleted. Check server logs.',
+      });
+    }
+    res.json({ deleted: key, dbRemoved });
   } catch (err) {
     console.error('S3 delete error:', err.message);
     res.status(500).json({ error: err.message });

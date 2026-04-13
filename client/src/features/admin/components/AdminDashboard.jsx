@@ -7,26 +7,24 @@ export function AdminDashboard() {
             <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-fuchsia-400 to-cyan-300" />
             <span className="text-sm text-white/80 font-medium">Liquid Glass Kit</span>
           </div>
-          <h2 className="text-xl md:text-2xl font-semibold tracking-tight mt-3">
-            Панель администратора
-          </h2>
+          <h2 className="text-xl md:text-2xl font-semibold tracking-tight mt-3">Admin dashboard</h2>
           <p className="text-xs text-white/50 mt-1">
-            Витрина интерфейса в стиле “glass”: полупрозрачность, размытие и тени.
+            Glass-style showcase: blur, translucency, and soft shadows.
           </p>
         </div>
       </div>
 
-      {/* Основной “витринный” блок */}
+      {/* Main showcase block */}
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-inner shadow-black/20 shadow-[0_25px_80px_-55px_rgba(0,0,0,0.95)] p-4 md:p-5">
         <div className="pointer-events-none absolute -top-20 -left-16 w-64 h-64 rounded-full bg-fuchsia-400/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-28 w-[26rem] h-[26rem] rounded-full bg-cyan-300/12 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent" />
 
         <div className="relative grid gap-4 lg:grid-cols-2">
-          {/* Левая колонка */}
+          {/* Left column */}
           <div className="space-y-4">
             <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-inner shadow-black/20 p-4">
-              <div className="text-[11px] uppercase tracking-widest text-white/60">Табы и переключатели</div>
+              <div className="text-[11px] uppercase tracking-widest text-white/60">Tabs & toggles</div>
 
               <div className="mt-3 space-y-2">
                 <button
@@ -48,7 +46,7 @@ export function AdminDashboard() {
                 <button
                   type="button"
                   className="w-11 h-11 rounded-2xl border border-white/10 bg-white/5 shadow-inner shadow-black/20 hover:bg-white/10 transition-colors flex items-center justify-center"
-                  aria-label="Добавить"
+                  aria-label="Add"
                 >
                   <span className="text-xl leading-none text-white/80">+</span>
                 </button>
@@ -60,7 +58,7 @@ export function AdminDashboard() {
                   >
                     <span className="text-xs text-white/70">Create workspace</span>
                     <span className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                      {/* Лупа */}
+                      {/* Search icon */}
                       <svg viewBox="0 0 24 24" className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <circle cx="11" cy="11" r="7" />
                         <path d="M21 21l-4.3-4.3" />
@@ -97,11 +95,11 @@ export function AdminDashboard() {
             </div>
           </div>
 
-          {/* Правая колонка */}
+          {/* Right column */}
           <div className="space-y-4">
             <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-inner shadow-black/20 p-4">
               <div className="flex items-center justify-between">
-                <div className="text-[11px] uppercase tracking-widest text-white/60">Поиск проектов</div>
+                <div className="text-[11px] uppercase tracking-widest text-white/60">Project search</div>
                 <div className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-white/5 border border-white/10">
                   <span className="text-white/60 text-xs">○</span>
                 </div>
@@ -123,7 +121,7 @@ export function AdminDashboard() {
                 <button
                   type="button"
                   className="w-11 h-11 rounded-2xl bg-gradient-to-br from-fuchsia-500/55 to-cyan-400/45 border border-white/15 shadow-[0_20px_60px_-40px_rgba(0,255,200,0.6)] hover:from-fuchsia-400/60 hover:to-emerald-400/35 transition-colors"
-                  aria-label="Добавить"
+                  aria-label="Add"
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4 text-white/90 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M12 5v14" />
@@ -171,7 +169,7 @@ export function AdminDashboard() {
             <div className="rounded-3xl border border-white/10 bg-gradient-to-r from-fuchsia-500/10 to-cyan-400/10 backdrop-blur-xl shadow-inner shadow-black/20 p-4 relative overflow-hidden">
               <div className="pointer-events-none absolute -top-20 -right-24 w-72 h-72 rounded-full bg-cyan-300/10 blur-3xl" />
               <div className="relative">
-                <div className="text-[11px] uppercase tracking-widest text-white/60">Приглашение участника</div>
+                <div className="text-[11px] uppercase tracking-widest text-white/60">Member invite</div>
                 <div className="mt-2 text-lg font-semibold">Invite member</div>
                 <p className="text-xs text-white/50 mt-1">Upgrade plan</p>
 

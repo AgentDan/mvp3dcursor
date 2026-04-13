@@ -1,26 +1,26 @@
-/** Эталон стороны чекбокса (px), от которого считается коэффициент r. */
+/** Reference checkbox side (px); scale factor r = checkSizePx / this. */
 export const REF_CHECK_PX = 30;
 
 /**
- * Настройки кнопки Workspace — ширина колонки, чекбокс, шрифт.
- * Пропорции бликов, теней, зазоров и скруглений считаются от checkSizePx (и опционально шрифта).
+ * Workspace row tune: column width, checkbox, label type.
+ * Highlights, shadows, gaps, radii scale from checkSizePx (and optionally font).
  */
 export const DEFAULT_LIQUID_GLASS_WORKSPACE_TUNE = {
-  /** Максимальная ширина блока с кнопкой (rem), не зависит от чекбокса */
+  /** Max row width (rem), independent of checkbox size */
   maxWidthRem: 28,
-  /** Сторона квадрата индикатора (px) — главный якорь пропорций */
+  /** Square indicator side (px) — main proportion anchor */
   checkSizePx: 30,
-  /** Размер шрифта подписи (rem) при эталонном чекбоксе 30px */
+  /** Label font size (rem) at reference 30px checkbox */
   labelFontRem: 1,
   /**
-   * true — font и tracking масштабируются вместе с checkSizePx;
-   * false — только labelFontRem (чекбокс меняется отдельно)
+   * true — font + tracking scale with checkSizePx;
+   * false — fixed labelFontRem; checkbox scales alone
    */
   scaleFontWithCheck: true,
 };
 
 /**
- * Чистая функция: по настройкам возвращает все размеры и строки теней для стеклянной кнопки.
+ * Pure: derive pixel sizes and shadow strings for the glass row.
  * @param {typeof DEFAULT_LIQUID_GLASS_WORKSPACE_TUNE} tune
  */
 export function liquidGlassWorkspaceDims(tune) {
@@ -67,7 +67,7 @@ export function liquidGlassWorkspaceDims(tune) {
     `0 ${Math.max(1, 2 * r)}px ${Math.max(2, 6 * r)}px rgba(0,0,0,0.18)`,
   ].join(', ');
 
-  /** Тень пустого кольца (без фиолетового halо), пропорционально r */
+  /** Unchecked ring shadow (no purple halo), scales with r */
   const checkOffShadow = [
     `0 ${Math.max(1, 3 * r)}px ${Math.max(2, 4 * r)}px rgba(0,0,0,0.2)`,
     `0 ${Math.max(4, 10 * r)}px ${Math.max(8, 28 * r)}px rgba(0,0,0,0.32)`,

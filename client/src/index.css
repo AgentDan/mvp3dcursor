@@ -21,7 +21,7 @@ button,
   cursor: pointer;
 }
 
-/* Three.js canvas внутри контейнера */
+/* Three.js canvas inside the configurator container */
 .configurator-canvas canvas {
   display: block;
   width: 100%;

@@ -6,7 +6,7 @@ import {
   LiquidGlassWorkspaceButton,
 } from '../../../components/ui/LiquidGlass';
 
-/** Размер самих кнопок (ширина дорожки) — не меняем при расширении серой панели. */
+/** Button row width (rem); unchanged when the gray panel grows wider. */
 const BUTTON_ROW_MAX_REM = 17;
 
 const MODEL_CHOICE_GLASS_TUNE = {
@@ -17,7 +17,7 @@ const MODEL_CHOICE_GLASS_TUNE = {
   scaleFontWithCheck: true,
 };
 
-/** Панель +20% к базовым 18rem → 21.6rem; кнопки уже по центру с равными полями слева/справа. */
+/** Panel width cap 21.6rem; buttons stay centered with equal side padding. */
 const PANEL_W = 'min(21.6rem,calc(100% - 2rem))';
 
 function useIsAdminModeFromLocation() {
@@ -49,7 +49,7 @@ export function ConfiguratorModelsPanel() {
     try {
       const res = await fetch(`/api/models?ownerUserId=${encodeURIComponent(ownerUserId)}`);
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Не удалось загрузить список моделей');
+      if (!res.ok) throw new Error(data.message || 'Failed to load models');
       setModels(Array.isArray(data.models) ? data.models : []);
     } catch (err) {
       setModels([]);
@@ -65,7 +65,7 @@ export function ConfiguratorModelsPanel() {
     load();
   }, [ownerUserId, isAdminMode, load]);
 
-  /** Первый заход без modelKey: подставляем первую модель в URL (как выбор в панели), чтобы сцена совпадала с панелью. */
+  /** First visit without modelKey: set URL to the first model so the scene matches the panel. */
   useEffect(() => {
     if (isAdminMode || !ownerUserId) return;
     if (isLoading || models.length === 0) return;
@@ -115,7 +115,7 @@ export function ConfiguratorModelsPanel() {
 
   const panelChromeExpanded =
     'rounded-lg border border-gray-500 bg-gray-400/95 text-gray-950 shadow-lg shadow-black/25 pointer-events-auto transition-[width,max-width] duration-200 ease-out';
-  /** Свернуто: стекло как у overlay-шапки (MainHeader) — те же blur / насыщенность / прозрачность. */
+  /** Collapsed: same glass treatment as MainHeader (blur / saturation / opacity). */
   const panelChromeCollapsed =
     'rounded-lg border border-white/15 bg-gray-400/25 backdrop-blur-md backdrop-saturate-150 ' +
     'supports-[backdrop-filter]:bg-gray-400/20 shadow-none pointer-events-auto transition-[width,max-width] duration-200 ease-out';
@@ -140,7 +140,7 @@ export function ConfiguratorModelsPanel() {
         onClick={() => setPanelExpanded((v) => !v)}
         aria-expanded={panelExpanded}
         aria-controls="configurator-models-panel-body"
-        aria-label={panelExpanded ? 'Свернуть панель выбора модели' : 'Развернуть панель выбора модели'}
+        aria-label={panelExpanded ? 'Collapse model picker' : 'Expand model picker'}
         className={`
           flex shrink-0 items-center justify-center focus:outline-none focus-visible:ring-2
           ${panelExpanded
@@ -171,15 +171,15 @@ export function ConfiguratorModelsPanel() {
 
           <div className="flex w-full min-w-0 flex-col items-center justify-center gap-2">
             {isLoading ? (
-              <div className="text-xs text-gray-800 text-center px-0.5">Загрузка…</div>
+              <div className="text-xs text-gray-800 text-center px-0.5">Loading…</div>
             ) : models.length === 0 ? (
               <div className="text-xs text-gray-800 text-center px-0.5 leading-snug">
-                Модели не найдены. Если вы администратор, привяжите файл к пользователю при загрузке в <b>3D Library</b>.
+                No models found. If you are an admin, assign an owner when uploading in <b>3D Library</b>.
               </div>
             ) : (
               <div
                 role="radiogroup"
-                aria-label="Выбор модели"
+                aria-label="Model selection"
                 className="flex w-full min-w-0 flex-col items-center gap-2"
               >
                 {models.map((m) => {

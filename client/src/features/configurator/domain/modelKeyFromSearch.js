@@ -1,7 +1,7 @@
 export const DEFAULT_CONFIGURATOR_MODEL_KEY = 'cube.gltf';
 
 /**
- * Какой ключ модели грузит конфигуратор из query (labKey приоритетнее modelKey).
+ * Model key from query string (`labKey` wins over `modelKey`).
  *
  * @param {string} search
  * @returns {string}

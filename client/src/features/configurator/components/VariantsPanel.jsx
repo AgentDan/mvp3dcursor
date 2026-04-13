@@ -5,7 +5,7 @@ import {
 } from '../../../components/ui/LiquidGlass';
 import { useConfigurator } from '../hooks/useConfigurator.js';
 
-/** Компактные стеклянные кнопки для индексов вариантов (как в панели моделей). */
+/** Compact glass-style buttons for variant indices (same language as models panel). */
 const VARIANT_GLASS_TUNE = {
   ...DEFAULT_LIQUID_GLASS_WORKSPACE_TUNE,
   checkSizePx: 18,
@@ -47,7 +47,7 @@ export function VariantsPanel() {
         onClick={() => setPanelExpanded((v) => !v)}
         aria-expanded={panelExpanded}
         aria-controls={panelExpanded ? 'variants-panel-body' : undefined}
-        aria-label={panelExpanded ? 'Свернуть панель вариантов' : 'Развернуть панель вариантов'}
+        aria-label={panelExpanded ? 'Collapse variants panel' : 'Expand variants panel'}
         className={`
           flex shrink-0 items-center justify-center focus:outline-none focus-visible:ring-2
           ${panelExpanded

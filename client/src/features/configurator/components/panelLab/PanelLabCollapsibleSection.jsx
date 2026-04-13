@@ -1,8 +1,6 @@
 import { useId, useState } from 'react';
 
-/**
- * Секция настроек в виде раскрывающегося блока: виден заголовок, по клику — содержимое.
- */
+/** Collapsible settings block: title always visible, body toggles on click. */
 export function PanelLabCollapsibleSection({ title, defaultOpen = false, children }) {
   const reactId = useId();
   const regionId = `panel-lab-section-${reactId.replace(/:/g, '')}`;

@@ -21,9 +21,9 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
-    // Включает автоматическое добавление полей createdAt и updatedAt
+    // Adds createdAt and updatedAt automatically
     timestamps: true,
-    // Использует отдельную коллекцию 'appusers', чтобы избежать конфликта со старой коллекцией 'users' (в ней индекс email_1)
+    // Uses the 'users' collection (aligned with existing DB; adjust if you need a separate collection)
     collection: 'users',
   }
 );

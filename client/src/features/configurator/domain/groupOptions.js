@@ -3,12 +3,12 @@
  */
 
 /**
- * Структура групп (без Three.js): для UI достаточно label и длины массива.
+ * Group map without Three (UI only needs label + option count).
  * @typedef {Object.<number, { label: string, nodes: Array<unknown> }>} GroupsLike
  */
 
 /**
- * Получает опции групп для UI из "сырых" данных групп. Чистая функция; единственный источник правды — sceneData.groups.
+ * Derive UI group options from raw groups. Pure; source of truth is `sceneData.groups`.
  *
  * @param {GroupsLike} groups
  * @returns {GroupOptionsMap}

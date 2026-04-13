@@ -1,4 +1,5 @@
 import { useMemo, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useGLTF } from '@react-three/drei';
 import { buildConfiguration } from '../application/buildConfiguration.js';
 import { updateConfiguration } from '../application/updateConfiguration.js';
@@ -26,20 +27,39 @@ export function ConfiguratorModel({ modelKey, requestId }) {
   // Cloning guarantees that each switch renders a fresh object in the scene graph.
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
+  const meshShadowsOn = useViewerSettingsStore(
+    useShallow((s) => {
+      const pl = s.panelLab;
+      return (
+        !!pl.renderer?.shadowMap?.enabled &&
+        !!pl.lighting?.directional?.enabled &&
+        !!pl.lighting?.directional?.shadow?.enabled
+      );
+    }),
+  );
+
+  useEffect(() => {
+    clonedScene.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = meshShadowsOn;
+        obj.receiveShadow = meshShadowsOn;
+      }
+    });
+  }, [clonedScene, meshShadowsOn]);
+
   const { sceneData: built } = useMemo(() => buildConfiguration(clonedScene), [clonedScene]);
   const localGroupOptions = useMemo(() => deriveGroupOptions(built.groups), [built]);
 
   useEffect(() => {
-    // Пишем sceneData в стор только для "текущего" запроса.
+    // Write sceneData only for the current load request.
     setSceneDataForRequest(requestId, built);
   }, [built, requestId, modelRequestId, setSceneDataForRequest]);
 
   useEffect(() => {
-    // Защита от устаревших загрузок при быстрых кликах.
+    // Ignore stale loads when switching models quickly.
     if (modelRequestId !== requestId) return;
 
-    // При каждой смене модели сначала сбрасываем окружение к дефолтам,
-    // чтобы не тянуть значения от предыдущего проекта.
+    // Reset viewer defaults on each model switch so settings do not leak from the previous file.
     resetViewerToDefaults();
 
     // Drei's useGLTF exposes the parsed GLTF JSON via parser.json.
@@ -48,18 +68,12 @@ export function ConfiguratorModel({ modelKey, requestId }) {
       gltf?.parser?.json?.extras?.panelLab ?? gltf?.userData?.gltf?.extras?.panelLab;
 
     if (extrasPanelLab && typeof extrasPanelLab === 'object') {
-      // eslint-disable-next-line no-console
-      //console.log('[Configurator] PanelLab environment for model', modelKey, extrasPanelLab);
       hydrateFromPanelLab(extrasPanelLab);
-    } else {
-      // eslint-disable-next-line no-console
-      //console.log('[Configurator] No PanelLab extras for model', modelKey);
     }
   }, [gltf, hydrateFromPanelLab, modelKey, modelRequestId, resetViewerToDefaults, requestId]);
 
   useEffect(() => {
-    // Важно: применяем visibility по локальному `built`, чтобы избежать рассинхрона
-    // между сценой, которая сейчас отображается, и `sceneData` в сторе.
+    // Apply visibility from local `built` to avoid desync between the rendered scene and store sceneData.
     if (modelRequestId !== requestId) return;
     updateConfiguration(selection, localGroupOptions, built);
   }, [selection, localGroupOptions, built, modelRequestId, requestId]);

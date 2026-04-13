@@ -33,7 +33,16 @@ async function createModel({ s3Key, ownerUserId, ownerNickname, title }) {
   return doc;
 }
 
+async function deleteModelByS3Key(s3Key) {
+  if (!s3Key || typeof s3Key !== 'string') {
+    return { deletedCount: 0 };
+  }
+  const r = await Model3D.deleteOne({ s3Key: s3Key.trim() });
+  return { deletedCount: r.deletedCount ?? 0 };
+}
+
 module.exports = {
   listModels,
   createModel,
+  deleteModelByS3Key,
 };

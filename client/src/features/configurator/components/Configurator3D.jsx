@@ -14,12 +14,34 @@ export function Configurator3D() {
   const location = useLocation();
   const modelKey = useMemo(() => getModelKeyFromLocationSearch(location.search), [location.search]);
   const isLoading = sceneData == null;
-  const { cameraPosition, cameraFov, resetToDefaults } = useViewerSettingsStore();
+  const camPx = useViewerSettingsStore((s) => s.panelLab.camera.position[0]);
+  const camPy = useViewerSettingsStore((s) => s.panelLab.camera.position[1]);
+  const camPz = useViewerSettingsStore((s) => s.panelLab.camera.position[2]);
+  const cameraFov = useViewerSettingsStore((s) => s.panelLab.camera.fov);
+  const cameraNear = useViewerSettingsStore((s) => s.panelLab.camera.near);
+  const cameraFar = useViewerSettingsStore((s) => s.panelLab.camera.far);
+  const shadowMapEnabled = useViewerSettingsStore((s) => !!s.panelLab.renderer.shadowMap?.enabled);
+  const rendererAntialias = useViewerSettingsStore((s) => !!s.panelLab.renderer.antialias);
+  const resetToDefaults = useViewerSettingsStore((s) => s.resetToDefaults);
+
+  const canvasCamera = useMemo(
+    () => ({
+      position: [camPx, camPy, camPz],
+      fov: cameraFov,
+      near: cameraNear,
+      far: cameraFar,
+    }),
+    [camPx, camPy, camPz, cameraFov, cameraNear, cameraFar],
+  );
+
+  const glProps = useMemo(
+    () => ({ antialias: rendererAntialias, alpha: true }),
+    [rendererAntialias],
+  );
 
   const requestIdRef = useRef(0);
   useLayoutEffect(() => {
-    // Сразу переводим интерфейс в "режим переключения" — скрываем старую модель
-    // и показываем индикатор загрузки, пока новая модель не соберется в sceneData.
+    // Enter switching mode: hide the old model until the new one builds sceneData.
     requestIdRef.current += 1;
     const nextId = requestIdRef.current;
 
@@ -27,8 +49,7 @@ export function Configurator3D() {
     setSceneData(null);
     resetSelection();
 
-    // Чтобы фон/окружение не "тащились" от предыдущей модели,
-    // сразу сбрасываем их в дефолтные значения.
+    // Reset viewer settings so background/environment do not carry over from the previous model.
     resetToDefaults();
   }, [modelKey, resetSelection, setModelRequestId, setSceneData, resetToDefaults]);
 
@@ -40,7 +61,7 @@ export function Configurator3D() {
         </div>
       )}
       <div className="configurator-canvas relative flex-1 min-w-0 min-h-0">
-        <Canvas camera={{ position: cameraPosition, fov: cameraFov }} gl={{ antialias: true }}>
+        <Canvas shadows={shadowMapEnabled} camera={canvasCamera} gl={glProps}>
           <ConfiguratorScene modelKey={modelKey} requestId={modelRequestId} />
         </Canvas>
         <ConfiguratorModelsPanel />

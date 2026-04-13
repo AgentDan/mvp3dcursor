@@ -1,5 +1,5 @@
 const express = require('express');
-const { openFromS3, saveToS3 } = require('./labController');
+const { openFromS3, saveToS3, closeLab } = require('./labController');
 const User = require('../auth/user.model');
 
 const router = express.Router();
@@ -9,6 +9,8 @@ router.post('/lab/from-s3', express.json(), openFromS3);
 
 // Admin Lab: save prepared temp file back to S3 (overwrite)
 router.post('/lab/save-to-s3', express.json(), saveToS3);
+// Admin Lab: close Lab session and delete temp file
+router.post('/lab/close', express.json(), closeLab);
 
 // List all users (for admin Users page)
 router.get('/users', async (req, res) => {

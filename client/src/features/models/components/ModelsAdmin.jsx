@@ -4,6 +4,16 @@ const API_BASE = '/api/s3';
 const MODELS_API_BASE = '/api/models';
 const ADMIN_USERS_API = '/api/admin/users';
 
+/** Native selects need a solid dark surface so option text is not white-on-white in some browsers. */
+const SELECT_FIELD =
+  'px-3 py-1.5 rounded-xl bg-slate-900 text-slate-100 border border-slate-600/90 text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-cyan-500/40';
+
+const TEXT_FIELD =
+  'px-3 py-1.5 rounded-xl bg-slate-900 text-slate-100 border border-slate-600/90 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40';
+
+const FILTER_FIELD =
+  'px-2.5 py-1.5 rounded-xl bg-slate-900 text-slate-100 border border-slate-600/90 text-xs placeholder:text-slate-500 w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/40';
+
 export function ModelsAdmin() {
   const [objects, setObjects] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +71,7 @@ export function ModelsAdmin() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!uploadFile) {
-      setUploadStatus({ type: 'error', message: 'Выберите файл' });
+      setUploadStatus({ type: 'error', message: 'Choose a file' });
       return;
     }
     setIsUploading(true);
@@ -76,8 +86,8 @@ export function ModelsAdmin() {
         body: formData,
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || data.message || 'Загрузка не удалась');
-      setUploadStatus({ type: 'success', message: `Загружено: ${data.key}` });
+      if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
+      setUploadStatus({ type: 'success', message: `Uploaded: ${data.key}` });
       setUploadFile(null);
       setUploadKey('');
       setOwnerNickname('');
@@ -94,7 +104,7 @@ export function ModelsAdmin() {
     try {
       const res = await fetch(`${API_BASE}/download/${encodeURIComponent(key)}`);
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Скачивание не удалось');
+      if (!res.ok) throw new Error(data.error || 'Download failed');
       if (data.url) window.open(data.url, '_blank');
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
@@ -102,11 +112,19 @@ export function ModelsAdmin() {
   };
 
   const handleRemove = async (key) => {
-    if (!window.confirm(`Удалить "${key}"?`)) return;
+    if (!window.confirm(`Delete "${key}"?`)) return;
     try {
       const res = await fetch(`${API_BASE}/object/${encodeURIComponent(key)}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Удаление не удалось');
+      if (!res.ok) throw new Error(data.error || 'Delete failed');
+      if (data.warning) {
+        setStatus({ type: 'error', message: data.warning });
+      } else {
+        setStatus({
+          type: 'success',
+          message: data.dbRemoved ? `Removed from S3 and database: ${key}` : `Removed from S3: ${key}`,
+        });
+      }
       load();
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
@@ -121,10 +139,8 @@ export function ModelsAdmin() {
         body: JSON.stringify({ key }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Не удалось подготовить Lab файл');
-      setStatus({ type: 'success', message: `Lab файл подготовлен для: ${key}` });
-
-      // Полная перезагрузка страницы — конфигуратор всегда грузит нужный файл, без кэша
+      if (!res.ok) throw new Error(data.error || 'Could not prepare Lab file');
+      setStatus({ type: 'success', message: `Lab file ready: ${key}` });
       window.location.assign(`/configurator?labKey=${encodeURIComponent(key)}`);
     } catch (err) {
       setStatus({ type: 'error', message: err.message });
@@ -160,23 +176,23 @@ export function ModelsAdmin() {
             <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-fuchsia-400 to-cyan-300" />
             <span className="text-xs text-white/70">Liquid Glass Kit</span>
           </div>
-          <h1 className="text-xl md:text-2xl font-semibold tracking-tight mt-3">3D Библиотека</h1>
-          <p className="text-xs text-white/50 mt-1">
-            Загрузка и управление файлами в S3 (R2): `.gltf`, `.glb` и другие форматы.
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight mt-3 text-white">3D Library</h1>
+          <p className="text-xs text-white/60 mt-1">
+            Upload and manage files in S3 (R2): <code className="text-cyan-200/90">.gltf</code>,{' '}
+            <code className="text-cyan-200/90">.glb</code>, and other formats.
           </p>
         </div>
       </div>
 
-      {/* Upload section */}
       <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-inner shadow-black/20 p-4">
         <div className="pointer-events-none absolute -top-16 -left-16 w-40 h-40 rounded-full bg-fuchsia-400/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -right-20 w-48 h-48 rounded-full bg-cyan-400/12 blur-3xl" />
 
         <div className="relative z-10">
-          <h2 className="text-xs font-semibold text-white/70 mb-2 uppercase tracking-wide">Загрузка в S3</h2>
+          <h2 className="text-xs font-semibold text-white/80 mb-2 uppercase tracking-wide">Upload to S3</h2>
           <form onSubmit={handleUpload} className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-xs text-white/60">
-              Файл
+            <label className="flex flex-col gap-1 text-xs text-white/70">
+              File
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <input
@@ -184,38 +200,44 @@ export function ModelsAdmin() {
                     name="file"
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    aria-label="Выбрать файл для загрузки"
+                    aria-label="Choose file to upload"
                   />
-                  <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 cursor-pointer hover:bg-white/10 transition-colors">
-                    Выбрать файл
+                  <div className="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-600/80 text-xs text-slate-100 cursor-pointer hover:bg-slate-800 transition-colors">
+                    Browse…
                   </div>
                 </div>
-                <span className="text-xs text-white/50">{uploadFile ? uploadFile.name : 'Файл не выбран'}</span>
+                <span className="text-xs text-slate-300">{uploadFile ? uploadFile.name : 'No file selected'}</span>
               </div>
             </label>
 
-            <label className="flex flex-col gap-1 text-xs text-white/60">
-              S3 key (опционально)
+            <label className="flex flex-col gap-1 text-xs text-white/70">
+              S3 key (optional)
               <input
                 type="text"
                 placeholder="filename.gltf"
                 value={uploadKey}
                 onChange={(e) => setUploadKey(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white/90 w-44 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                className={`w-44 ${TEXT_FIELD}`}
               />
             </label>
 
-            <label className="flex flex-col gap-1 text-xs text-white/60">
-              Владелец (опционально)
+            <label className="flex flex-col gap-1 text-xs text-white/70">
+              Owner (optional)
               <select
                 value={ownerNickname}
                 onChange={(e) => setOwnerNickname(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white/90 w-44 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
-                aria-label="Выбрать пользователя"
+                className={`w-52 ${SELECT_FIELD}`}
+                aria-label="Select owner user"
               >
-                <option value="">— Без владельца —</option>
+                <option value="" className="bg-slate-900 text-slate-100">
+                  — No owner —
+                </option>
                 {users.map((u) => (
-                  <option key={u.id || u.nickname} value={u.nickname || ''}>
+                  <option
+                    key={u.id || u.nickname}
+                    value={u.nickname || ''}
+                    className="bg-slate-900 text-slate-100"
+                  >
                     {u.nickname || '—'}
                   </option>
                 ))}
@@ -227,7 +249,7 @@ export function ModelsAdmin() {
               disabled={isUploading || !uploadFile}
               className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-fuchsia-500/60 to-cyan-400/45 hover:from-fuchsia-400/65 hover:to-emerald-400/40 disabled:opacity-50 text-white text-xs font-semibold border border-white/10 shadow-[0_20px_70px_-45px_rgba(0,255,200,0.55)] transition-colors"
             >
-              {isUploading ? 'Загрузка…' : 'Загрузить'}
+              {isUploading ? 'Uploading…' : 'Upload'}
             </button>
           </form>
 
@@ -239,21 +261,20 @@ export function ModelsAdmin() {
         </div>
       </section>
 
-      {/* List section */}
       <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-inner shadow-black/20 p-4">
         <div className="pointer-events-none absolute -top-16 -left-16 w-44 h-44 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 w-52 h-52 rounded-full bg-fuchsia-400/10 blur-3xl" />
 
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <h2 className="text-sm font-semibold text-white/80">Файлы в бакете</h2>
+            <h2 className="text-sm font-semibold text-white">Bucket files</h2>
             <button
               type="button"
               onClick={load}
               disabled={isLoading}
-              className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-60 border border-white/10 text-xs text-white/70 shadow-inner shadow-black/20"
+              className="px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 disabled:opacity-60 border border-slate-600/80 text-xs text-slate-100 shadow-inner shadow-black/20"
             >
-              {isLoading ? 'Загрузка…' : 'Обновить'}
+              {isLoading ? 'Loading…' : 'Refresh'}
             </button>
           </div>
 
@@ -268,37 +289,44 @@ export function ModelsAdmin() {
           )}
 
           {filteredObjects.length === 0 && !isLoading ? (
-            <div className="text-white/60 text-sm">В бакете нет файлов `.gltf` или `.glb`.</div>
+            <div className="text-slate-300 text-sm">No <code className="text-cyan-200/90">.gltf</code> or{' '}
+              <code className="text-cyan-200/90">.glb</code> files in the bucket.</div>
           ) : (
-            <div className="overflow-auto rounded-2xl border border-white/10 bg-white/5">
+            <div className="overflow-auto rounded-2xl border border-white/10 bg-slate-950/40">
               <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/5">
-                    <th className="text-left py-2 pr-4 font-semibold text-white/70 align-top">
+                  <tr className="border-b border-white/10 bg-slate-900/50">
+                    <th className="text-left py-2 pr-4 font-semibold text-slate-200 align-top">
                       <div className="flex flex-col gap-1">
-                        <span>Имя файла</span>
+                        <span>File name</span>
                         <input
                           type="text"
-                          placeholder="Поиск…"
+                          placeholder="Search…"
                           value={searchFileName}
                           onChange={(e) => setSearchFileName(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs w-full max-w-xs text-white/90 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
-                          aria-label="Поиск по имени файла"
+                          className={FILTER_FIELD}
+                          aria-label="Search by file name"
                         />
                       </div>
                     </th>
-                    <th className="text-left py-2 pr-4 font-semibold text-white/70 align-top">
+                    <th className="text-left py-2 pr-4 font-semibold text-slate-200 align-top">
                       <div className="flex flex-col gap-1">
-                        <span>Владелец</span>
+                        <span>Owner</span>
                         <select
                           value={searchNickname}
                           onChange={(e) => setSearchNickname(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs w-full max-w-xs text-white/90 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
-                          aria-label="Фильтр по пользователю"
+                          className={FILTER_FIELD}
+                          aria-label="Filter by owner"
                         >
-                          <option value="">Все пользователи</option>
+                          <option value="" className="bg-slate-900 text-slate-100">
+                            All users
+                          </option>
                           {users.map((u) => (
-                            <option key={u.id || u.nickname} value={u.nickname || ''}>
+                            <option
+                              key={u.id || u.nickname}
+                              value={u.nickname || ''}
+                              className="bg-slate-900 text-slate-100"
+                            >
                               {u.nickname || '—'}
                             </option>
                           ))}
@@ -314,15 +342,15 @@ export function ModelsAdmin() {
                     const owner = ownerByKey[rawKey] || '—';
                     return (
                       <tr key={rawKey} className="border-b border-white/10 hover:bg-white/5">
-                        <td className="py-2 pr-4 font-mono text-xs text-white/80">{rawKey}</td>
-                        <td className="py-2 pr-4 text-xs text-white/70">{owner}</td>
+                        <td className="py-2 pr-4 font-mono text-xs text-slate-200">{rawKey}</td>
+                        <td className="py-2 pr-4 text-xs font-medium text-slate-100">{owner}</td>
                         <td className="py-2">
                           <div className="flex w-full items-center justify-end gap-2">
                             <button
                               type="button"
                               onClick={() => handleDownload(rawKey)}
-                              className="p-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/70"
-                              aria-label="Скачать файл"
+                              className="p-1.5 rounded-xl border border-white/15 bg-slate-800/80 hover:bg-slate-700 text-slate-200"
+                              aria-label="Download file"
                             >
                               <svg
                                 className="w-4 h-4"
@@ -343,8 +371,8 @@ export function ModelsAdmin() {
                             <button
                               type="button"
                               onClick={() => handleOpenLab(rawKey)}
-                              className="p-1.5 rounded-xl border border-amber-400/25 bg-amber-400/10 hover:bg-amber-400/15 text-amber-200"
-                              aria-label="Открыть в Lab"
+                              className="p-1.5 rounded-xl border border-amber-400/35 bg-amber-500/20 hover:bg-amber-500/30 text-amber-100"
+                              aria-label="Open in Lab"
                             >
                               <svg
                                 className="w-4 h-4"
@@ -365,8 +393,8 @@ export function ModelsAdmin() {
                             <button
                               type="button"
                               onClick={() => handleRemove(rawKey)}
-                              className="p-1.5 rounded-xl border border-red-400/25 bg-red-400/10 hover:bg-red-400/15 text-red-200"
-                              aria-label="Удалить файл"
+                              className="p-1.5 rounded-xl border border-red-400/35 bg-red-500/15 hover:bg-red-500/25 text-red-100"
+                              aria-label="Delete file"
                             >
                               <svg
                                 className="w-4 h-4"
