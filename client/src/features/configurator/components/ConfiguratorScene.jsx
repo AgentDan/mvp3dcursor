@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Environment, OrbitControls } from '@react-three/drei';
 import { ConfiguratorModel } from './ConfiguratorModel.jsx';
@@ -49,10 +49,13 @@ export function ConfiguratorScene({ modelKey, requestId }) {
     /* eslint-enable react-hooks/immutability */
   }, [threeCamera, camPx, camPy, camPz, camFov, camNear, camFar]);
 
-  useEffect(() => {
+  const shadowMapEnabled = !!renderer?.shadowMap?.enabled;
+  const shadowMapType = renderer?.shadowMap?.type;
+
+  useLayoutEffect(() => {
     const L = dirLightRef.current;
     const dir = lighting?.directional;
-    if (!L || !dir?.shadow?.enabled) return;
+    if (!L || !dir?.shadow?.enabled || !shadowMapEnabled) return;
 
     L.shadow.mapSize.set(dir.shadow.mapSize[0] ?? 2048, dir.shadow.mapSize[1] ?? 2048);
     L.shadow.bias = dir.shadow.bias;
@@ -70,7 +73,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
       cam.bottom = sc.bottom;
       cam.updateProjectionMatrix();
     }
-  }, [lighting?.directional]);
+  }, [lighting?.directional, shadowMapEnabled, shadowMapType]);
 
   const fog = environment?.fog;
   const pointLights = lighting?.pointLights ?? [];

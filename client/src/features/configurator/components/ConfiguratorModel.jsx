@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useLayoutEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGLTF } from '@react-three/drei';
 import { buildConfiguration } from '../application/buildConfiguration.js';
@@ -38,6 +38,20 @@ export function ConfiguratorModel({ modelKey, requestId }) {
     }),
   );
 
+  // Apply embedded panelLab before paint so mesh shadow flags (useEffect below) see the hydrated store.
+  useLayoutEffect(() => {
+    if (modelRequestId !== requestId) return;
+
+    resetViewerToDefaults();
+
+    const extrasPanelLab =
+      gltf?.parser?.json?.extras?.panelLab ?? gltf?.userData?.gltf?.extras?.panelLab;
+
+    if (extrasPanelLab && typeof extrasPanelLab === 'object') {
+      hydrateFromPanelLab(extrasPanelLab);
+    }
+  }, [gltf, hydrateFromPanelLab, modelKey, modelRequestId, resetViewerToDefaults, requestId]);
+
   useEffect(() => {
     clonedScene.traverse((obj) => {
       if (obj.isMesh) {
@@ -54,23 +68,6 @@ export function ConfiguratorModel({ modelKey, requestId }) {
     // Write sceneData only for the current load request.
     setSceneDataForRequest(requestId, built);
   }, [built, requestId, modelRequestId, setSceneDataForRequest]);
-
-  useEffect(() => {
-    // Ignore stale loads when switching models quickly.
-    if (modelRequestId !== requestId) return;
-
-    // Reset viewer defaults on each model switch so settings do not leak from the previous file.
-    resetViewerToDefaults();
-
-    // Drei's useGLTF exposes the parsed GLTF JSON via parser.json.
-    // Top-level extras (where panelLab lives) are stored there.
-    const extrasPanelLab =
-      gltf?.parser?.json?.extras?.panelLab ?? gltf?.userData?.gltf?.extras?.panelLab;
-
-    if (extrasPanelLab && typeof extrasPanelLab === 'object') {
-      hydrateFromPanelLab(extrasPanelLab);
-    }
-  }, [gltf, hydrateFromPanelLab, modelKey, modelRequestId, resetViewerToDefaults, requestId]);
 
   useEffect(() => {
     // Apply visibility from local `built` to avoid desync between the rendered scene and store sceneData.

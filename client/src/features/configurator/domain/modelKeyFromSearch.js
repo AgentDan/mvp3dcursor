@@ -1,4 +1,4 @@
-export const DEFAULT_CONFIGURATOR_MODEL_KEY = 'cube.gltf';
+export const DEFAULT_CONFIGURATOR_MODEL_KEY = '';
 
 /**
  * Model key from query string (`labKey` wins over `modelKey`).

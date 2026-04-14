@@ -174,7 +174,9 @@ const REQUIRED_TOP = [
 
 function isValidPanelLabShape(raw) {
   if (!isPlainObject(raw)) return false;
-  if (Number(raw.version) < PANEL_LAB_VERSION) return false;
+  // Treat missing version as legacy (merge with defaults). Only reject explicitly older integers.
+  const ver = raw.version;
+  if (ver != null && ver !== '' && Number(ver) < PANEL_LAB_VERSION) return false;
   for (const k of REQUIRED_TOP) {
     if (!isPlainObject(raw[k])) return false;
   }

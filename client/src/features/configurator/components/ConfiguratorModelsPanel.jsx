@@ -96,11 +96,7 @@ export function ConfiguratorModelsPanel() {
 
   const params = new URLSearchParams(location.search);
   const currentModelKey = (params.get('modelKey') || '').trim();
-
-  const modelKeys = useMemo(
-    () => models.map((m) => (m?.s3Key || '').toString()).filter(Boolean),
-    [models],
-  );
+  const modelKeys = models.map((m) => (m?.s3Key || '').toString()).filter(Boolean);
   const selectValue = modelKeys.includes(currentModelKey)
     ? currentModelKey
     : modelKeys[0] || '';

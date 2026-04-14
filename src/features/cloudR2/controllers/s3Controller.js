@@ -117,7 +117,12 @@ async function stream(req, res) {
     body.pipe(res);
   } catch (err) {
     console.error('S3 stream error:', err.message);
-    res.status(500).json({ error: err.message });
+    const notFound =
+      err?.name === 'NoSuchKey' ||
+      err?.Code === 'NoSuchKey' ||
+      err?.$metadata?.httpStatusCode === 404 ||
+      /does not exist/i.test(String(err?.message || ''));
+    res.status(notFound ? 404 : 500).json({ error: err.message });
   }
 }
 

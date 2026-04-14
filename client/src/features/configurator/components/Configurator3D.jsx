@@ -13,14 +13,26 @@ export function Configurator3D() {
   const { sceneData, setSceneData, resetSelection, modelRequestId, setModelRequestId } = useConfigurator();
   const location = useLocation();
   const modelKey = useMemo(() => getModelKeyFromLocationSearch(location.search), [location.search]);
-  const isLoading = sceneData == null;
+  const hasModelKey = !!modelKey.trim();
+  const isLoading = hasModelKey && sceneData == null;
   const camPx = useViewerSettingsStore((s) => s.panelLab.camera.position[0]);
   const camPy = useViewerSettingsStore((s) => s.panelLab.camera.position[1]);
   const camPz = useViewerSettingsStore((s) => s.panelLab.camera.position[2]);
   const cameraFov = useViewerSettingsStore((s) => s.panelLab.camera.fov);
   const cameraNear = useViewerSettingsStore((s) => s.panelLab.camera.near);
   const cameraFar = useViewerSettingsStore((s) => s.panelLab.camera.far);
-  const shadowMapEnabled = useViewerSettingsStore((s) => !!s.panelLab.renderer.shadowMap?.enabled);
+  /** Match R3F Canvas `shadows` prop to Panel Lab type so init + soft PCF match saved settings. */
+  const canvasShadows = useViewerSettingsStore((s) => {
+    const sm = s.panelLab.renderer?.shadowMap;
+    if (!sm?.enabled) return false;
+    const map = {
+      BasicShadowMap: 'basic',
+      PCFShadowMap: 'percentage',
+      PCFSoftShadowMap: 'soft',
+      VSMShadowMap: 'variance',
+    };
+    return map[sm.type] ?? 'soft';
+  });
   const rendererAntialias = useViewerSettingsStore((s) => !!s.panelLab.renderer.antialias);
   const resetToDefaults = useViewerSettingsStore((s) => s.resetToDefaults);
 
@@ -61,8 +73,8 @@ export function Configurator3D() {
         </div>
       )}
       <div className="configurator-canvas relative flex-1 min-w-0 min-h-0">
-        <Canvas shadows={shadowMapEnabled} camera={canvasCamera} gl={glProps}>
-          <ConfiguratorScene modelKey={modelKey} requestId={modelRequestId} />
+        <Canvas shadows={canvasShadows} camera={canvasCamera} gl={glProps}>
+          {hasModelKey ? <ConfiguratorScene modelKey={modelKey} requestId={modelRequestId} /> : null}
         </Canvas>
         <ConfiguratorModelsPanel />
         <PanelLabPanel />

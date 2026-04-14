@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import {
   resolveOutputColorSpace,
@@ -8,8 +8,9 @@ import {
 
 export function PanelLabGLSync({ renderer }) {
   const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!renderer || !gl) return;
 
     gl.toneMapping = resolveToneMapping(renderer.toneMapping);
@@ -17,13 +18,19 @@ export function PanelLabGLSync({ renderer }) {
     gl.outputColorSpace = resolveOutputColorSpace(renderer.outputColorSpace);
 
     const sm = renderer.shadowMap;
+    const prevEnabled = gl.shadowMap.enabled;
+    const prevType = gl.shadowMap.type;
     if (sm?.enabled) {
       gl.shadowMap.enabled = true;
       gl.shadowMap.type = resolveShadowMapType(sm.type);
     } else {
       gl.shadowMap.enabled = false;
     }
-  }, [gl, renderer]);
+    if (prevEnabled !== gl.shadowMap.enabled || prevType !== gl.shadowMap.type) {
+      gl.shadowMap.needsUpdate = true;
+    }
+    invalidate();
+  }, [gl, invalidate, renderer]);
 
   return null;
 }

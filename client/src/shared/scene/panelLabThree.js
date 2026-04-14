@@ -12,6 +12,7 @@ export function resolveOutputColorSpace(name) {
 }
 
 export function resolveShadowMapType(name) {
+  if (typeof name === 'number' && Number.isFinite(name)) return name;
   const v = THREE[name];
   return typeof v === 'number' ? v : THREE.PCFSoftShadowMap;
 }
