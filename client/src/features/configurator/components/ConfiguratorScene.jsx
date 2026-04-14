@@ -5,6 +5,9 @@ import { ConfiguratorModel } from './ConfiguratorModel.jsx';
 import { useViewerSettingsStore } from '../../../shared/scene/viewerSettingsStore.js';
 import { PanelLabGLSync } from './PanelLabGLSync.jsx';
 import { PanelLabPostFx } from './PanelLabPostFx.jsx';
+import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
+
+const DEF_DIR = DEFAULT_PANEL_LAB.lighting.directional;
 
 export function ConfiguratorScene({ modelKey, requestId }) {
   const panelLab = useViewerSettingsStore((s) => s.panelLab);
@@ -57,22 +60,28 @@ export function ConfiguratorScene({ modelKey, requestId }) {
     const dir = lighting?.directional;
     if (!L || !dir?.shadow?.enabled || !shadowMapEnabled) return;
 
-    L.shadow.mapSize.set(dir.shadow.mapSize[0] ?? 2048, dir.shadow.mapSize[1] ?? 2048);
-    L.shadow.bias = dir.shadow.bias;
-    L.shadow.normalBias = dir.shadow.normalBias;
-    L.shadow.radius = dir.shadow.radius;
+    const ms = dir.shadow.mapSize ?? DEF_DIR.shadow.mapSize;
+    L.shadow.mapSize.set(ms?.[0] ?? 2048, ms?.[1] ?? 2048);
+    L.shadow.bias = typeof dir.shadow.bias === 'number' ? dir.shadow.bias : DEF_DIR.shadow.bias;
+    L.shadow.normalBias =
+      typeof dir.shadow.normalBias === 'number' ? dir.shadow.normalBias : DEF_DIR.shadow.normalBias;
+    L.shadow.radius = typeof dir.shadow.radius === 'number' ? dir.shadow.radius : DEF_DIR.shadow.radius;
+    L.shadow.blurSamples =
+      typeof dir.shadow.blurSamples === 'number' ? dir.shadow.blurSamples : DEF_DIR.shadow.blurSamples;
 
     const cam = L.shadow.camera;
-    const sc = dir.shadow.camera;
+    const sc = dir.shadow.camera ?? DEF_DIR.shadow.camera;
     if (cam && sc) {
-      cam.near = sc.near;
-      cam.far = sc.far;
-      cam.left = sc.left;
-      cam.right = sc.right;
-      cam.top = sc.top;
-      cam.bottom = sc.bottom;
+      cam.near = typeof sc.near === 'number' ? sc.near : DEF_DIR.shadow.camera.near;
+      cam.far = typeof sc.far === 'number' ? sc.far : DEF_DIR.shadow.camera.far;
+      cam.left = typeof sc.left === 'number' ? sc.left : DEF_DIR.shadow.camera.left;
+      cam.right = typeof sc.right === 'number' ? sc.right : DEF_DIR.shadow.camera.right;
+      cam.top = typeof sc.top === 'number' ? sc.top : DEF_DIR.shadow.camera.top;
+      cam.bottom = typeof sc.bottom === 'number' ? sc.bottom : DEF_DIR.shadow.camera.bottom;
       cam.updateProjectionMatrix();
     }
+
+    L.shadow.needsUpdate = true;
   }, [lighting?.directional, shadowMapEnabled, shadowMapType]);
 
   const fog = environment?.fog;
@@ -118,12 +127,21 @@ export function ConfiguratorScene({ modelKey, requestId }) {
       {lighting?.directional?.enabled ? (
         <directionalLight
           ref={dirLightRef}
-          color={lighting.directional.color}
-          intensity={lighting.directional.intensity}
-          position={lighting.directional.position}
+          color={lighting.directional.color ?? DEF_DIR.color}
+          intensity={
+            typeof lighting.directional.intensity === 'number' ? lighting.directional.intensity : DEF_DIR.intensity
+          }
+          position={
+            Array.isArray(lighting.directional.position) ? lighting.directional.position : DEF_DIR.position
+          }
           castShadow={!!lighting.directional.shadow?.enabled && !!renderer?.shadowMap?.enabled}
         >
-          <object3D attach="target" position={lighting.directional.target} />
+          <object3D
+            attach="target"
+            position={
+              Array.isArray(lighting.directional.target) ? lighting.directional.target : DEF_DIR.target
+            }
+          />
         </directionalLight>
       ) : null}
 

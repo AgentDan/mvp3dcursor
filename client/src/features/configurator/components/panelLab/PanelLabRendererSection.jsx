@@ -72,10 +72,14 @@ export function PanelLabRendererSection({ renderer, patchRenderer }) {
         >
           {SHADOW_TYPES.map((o) => (
             <option key={o} value={o}>
-              {o}
+              {o === 'PCFSoftShadowMap' ? `${o} (no extra blur in r182)` : o}
             </option>
           ))}
         </select>
+        <span className="text-[10px] leading-snug text-amber-900/90">
+          Soft shadow borders: use <strong>VSMShadowMap</strong>, then tune directional <strong>radius</strong> and{' '}
+          <strong>blur samples</strong> in Lighting.
+        </span>
       </label>
       <label className="flex items-center gap-2 text-[11px] text-gray-700">
         <input

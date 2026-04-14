@@ -11,10 +11,25 @@ export function resolveOutputColorSpace(name) {
   return typeof v === 'number' ? v : THREE.SRGBColorSpace;
 }
 
+/** Map short / mistaken JSON values to THREE constant names. */
+const SHADOW_TYPE_ALIASES = {
+  VSM: 'VSMShadowMap',
+  variance: 'VSMShadowMap',
+  PCF: 'PCFShadowMap',
+  percentage: 'PCFShadowMap',
+  basic: 'BasicShadowMap',
+  soft: 'PCFShadowMap',
+};
+
 export function resolveShadowMapType(name) {
   if (typeof name === 'number' && Number.isFinite(name)) return name;
-  const v = THREE[name];
-  return typeof v === 'number' ? v : THREE.PCFSoftShadowMap;
+  if (typeof name === 'string') {
+    const key = SHADOW_TYPE_ALIASES[name] || name;
+    const v = THREE[key];
+    if (typeof v === 'number') return v;
+  }
+  // Never default to PCFSoft: Three r182 maps it to plain PCF (radius blur ignored).
+  return THREE.VSMShadowMap;
 }
 
 export function resolveMapping(name) {

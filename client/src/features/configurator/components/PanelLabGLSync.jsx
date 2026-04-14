@@ -29,6 +29,9 @@ export function PanelLabGLSync({ renderer }) {
     if (prevEnabled !== gl.shadowMap.enabled || prevType !== gl.shadowMap.type) {
       gl.shadowMap.needsUpdate = true;
     }
+    if (sm?.enabled) {
+      gl.shadowMap.needsUpdate = true;
+    }
     invalidate();
   }, [gl, invalidate, renderer]);
 

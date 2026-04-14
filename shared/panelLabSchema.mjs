@@ -54,16 +54,21 @@ export const DEFAULT_PANEL_LAB = {
       shadow: {
         enabled: true,
         mapSize: [2048, 2048],
-        bias: -0.0002,
-        normalBias: 0.02,
-        radius: 4,
+        /** VSM: small depth bias; rely more on normalBias for contact artefacts. */
+        bias: -0.00005,
+        /** Higher default reduces self-shadow acne when meshes both cast and receive. */
+        normalBias: 0.06,
+        /** VSM blur strength; Three docs: values > 1 visibly soften edges. */
+        radius: 8,
+        blurSamples: 16,
         camera: {
           near: 0.5,
           far: 50,
-          left: -10,
-          right: 10,
-          top: 10,
-          bottom: -10,
+          /** Tighter ortho frustum → better texel density (less blocky edges). */
+          left: -6,
+          right: 6,
+          top: 6,
+          bottom: -6,
         },
       },
     },
@@ -89,7 +94,8 @@ export const DEFAULT_PANEL_LAB = {
     outputColorSpace: 'SRGBColorSpace',
     shadowMap: {
       enabled: true,
-      type: 'PCFSoftShadowMap',
+      /** PCFSoft is deprecated in Three r182 (treated as PCF). VSM enables radius + blurSamples. */
+      type: 'VSMShadowMap',
     },
     antialias: true,
   },
@@ -191,6 +197,27 @@ export function normalizePanelLabToEmbedded(raw) {
   if (!isValidPanelLabShape(raw)) return defaults;
   const merged = deepMerge(defaults, raw);
   merged.version = PANEL_LAB_VERSION;
+  if (merged.renderer?.shadowMap?.type === 'PCFSoftShadowMap') {
+    merged.renderer = {
+      ...merged.renderer,
+      shadowMap: { ...merged.renderer.shadowMap, type: 'VSMShadowMap' },
+    };
+  }
+  // BasicShadowMap is very blocky; embedded files often ship it by mistake.
+  if (merged.renderer?.shadowMap?.enabled && merged.renderer?.shadowMap?.type === 'BasicShadowMap') {
+    merged.renderer = {
+      ...merged.renderer,
+      shadowMap: { ...merged.renderer.shadowMap, type: 'VSMShadowMap' },
+    };
+  }
+  const dsh = merged.lighting?.directional?.shadow;
+  if (dsh?.enabled && Array.isArray(dsh.mapSize)) {
+    const w = Number(dsh.mapSize[0]);
+    const h = Number(dsh.mapSize[1]);
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w < 512 || h < 512) {
+      dsh.mapSize = [2048, 2048];
+    }
+  }
   return merged;
 }
 

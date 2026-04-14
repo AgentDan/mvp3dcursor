@@ -30,7 +30,12 @@ export function PanelLabPanelBody({
           <PanelLabEnvironmentSection environment={panelLab.environment} patchEnvironment={patchEnvironment} />
         </PanelLabCollapsibleSection>
         <PanelLabCollapsibleSection title="Lighting" defaultOpen={false}>
-          <PanelLabLightingSection lighting={panelLab.lighting} patchLighting={patchLighting} />
+          <PanelLabLightingSection
+            lighting={panelLab.lighting}
+            patchLighting={patchLighting}
+            renderer={panelLab.renderer}
+            patchRenderer={patchRenderer}
+          />
         </PanelLabCollapsibleSection>
         <PanelLabCollapsibleSection title="Ground" defaultOpen={false}>
           <PanelLabGroundSection ground={panelLab.ground} patchGround={patchGround} />

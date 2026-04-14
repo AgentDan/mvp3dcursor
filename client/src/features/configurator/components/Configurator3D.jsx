@@ -7,7 +7,10 @@ import { VariantsPanel } from './VariantsPanel.jsx';
 import { PanelLabPanel } from './PanelLabPanel.jsx';
 import { ConfiguratorModelsPanel } from './ConfiguratorModelsPanel.jsx';
 import { useViewerSettingsStore } from '../../../shared/scene/viewerSettingsStore.js';
+import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
 import { getModelKeyFromLocationSearch } from '../domain/modelKeyFromSearch.js';
+
+const DEF_CAM = DEFAULT_PANEL_LAB.camera;
 
 export function Configurator3D() {
   const { sceneData, setSceneData, resetSelection, modelRequestId, setModelRequestId } = useConfigurator();
@@ -31,7 +34,7 @@ export function Configurator3D() {
       PCFSoftShadowMap: 'soft',
       VSMShadowMap: 'variance',
     };
-    return map[sm.type] ?? 'soft';
+    return map[sm.type] ?? 'variance';
   });
   const rendererAntialias = useViewerSettingsStore((s) => !!s.panelLab.renderer.antialias);
   const resetToDefaults = useViewerSettingsStore((s) => s.resetToDefaults);

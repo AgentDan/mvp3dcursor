@@ -52,7 +52,7 @@ export function ConfiguratorModel({ modelKey, requestId }) {
     }
   }, [gltf, hydrateFromPanelLab, modelKey, modelRequestId, resetViewerToDefaults, requestId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     clonedScene.traverse((obj) => {
       if (obj.isMesh) {
         obj.castShadow = meshShadowsOn;
