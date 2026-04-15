@@ -2,7 +2,14 @@ import { PanelLabIntro } from './PanelLabIntro.jsx';
 import { PanelLabKeyBadge } from './PanelLabKeyBadge.jsx';
 import { PanelLabCollapsibleSection } from './PanelLabCollapsibleSection.jsx';
 import { PanelLabEnvironmentSection } from './PanelLabEnvironmentSection.jsx';
-import { PanelLabLightingSection } from './PanelLabLightingSection.jsx';
+import {
+  PanelLabAmbientLightingSection,
+  PanelLabHemisphereLightingSection,
+  PanelLabDirectionalLightingSection,
+  PanelLabPointLightsSection,
+  PanelLabSpotLightsSection,
+  PanelLabShadowsSection,
+} from './PanelLabLightingSection.jsx';
 import { PanelLabGroundSection } from './PanelLabGroundSection.jsx';
 import { PanelLabRendererSection } from './PanelLabRendererSection.jsx';
 import { PanelLabPostSection } from './PanelLabPostSection.jsx';
@@ -29,8 +36,26 @@ export function PanelLabPanelBody({
         <PanelLabCollapsibleSection title="Environment" defaultOpen={false}>
           <PanelLabEnvironmentSection environment={panelLab.environment} patchEnvironment={patchEnvironment} />
         </PanelLabCollapsibleSection>
-        <PanelLabCollapsibleSection title="Lighting" defaultOpen={false}>
-          <PanelLabLightingSection
+        <PanelLabCollapsibleSection title="Lighting Ambient" defaultOpen={false}>
+          <PanelLabAmbientLightingSection lighting={panelLab.lighting} patchLighting={patchLighting} />
+        </PanelLabCollapsibleSection>
+        <PanelLabCollapsibleSection title="Lighting Hemisphere" defaultOpen={false}>
+          <PanelLabHemisphereLightingSection lighting={panelLab.lighting} patchLighting={patchLighting} />
+        </PanelLabCollapsibleSection>
+        <PanelLabCollapsibleSection title="Lighting Directional" defaultOpen={false}>
+          <PanelLabDirectionalLightingSection
+            lighting={panelLab.lighting}
+            patchLighting={patchLighting}
+          />
+        </PanelLabCollapsibleSection>
+        <PanelLabCollapsibleSection title="Lighting Point" defaultOpen={false}>
+          <PanelLabPointLightsSection lighting={panelLab.lighting} patchLighting={patchLighting} />
+        </PanelLabCollapsibleSection>
+        <PanelLabCollapsibleSection title="Lighting Spot" defaultOpen={false}>
+          <PanelLabSpotLightsSection lighting={panelLab.lighting} patchLighting={patchLighting} />
+        </PanelLabCollapsibleSection>
+        <PanelLabCollapsibleSection title="Shadows" defaultOpen={false}>
+          <PanelLabShadowsSection
             lighting={panelLab.lighting}
             patchLighting={patchLighting}
             renderer={panelLab.renderer}

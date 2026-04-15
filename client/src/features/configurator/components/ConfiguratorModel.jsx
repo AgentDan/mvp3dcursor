@@ -30,10 +30,21 @@ export function ConfiguratorModel({ modelKey, requestId }) {
   const meshShadowsOn = useViewerSettingsStore(
     useShallow((s) => {
       const pl = s.panelLab;
+      const shadowsEnabled = !!pl.lighting?.shadows?.enabled;
+      const directionalCasts = !!pl.lighting?.directional?.enabled && pl.lighting?.directional?.castShadow !== false;
+      const directionalExtraCasts = Array.isArray(pl.lighting?.directionalLights)
+        ? pl.lighting.directionalLights.some((l) => l && l.enabled !== false && l.castShadow !== false)
+        : false;
+      const pointCasts = Array.isArray(pl.lighting?.pointLights)
+        ? pl.lighting.pointLights.some((l) => l && l.enabled !== false && !!l.castShadow)
+        : false;
+      const spotCasts = Array.isArray(pl.lighting?.spotLights)
+        ? pl.lighting.spotLights.some((l) => l && l.enabled !== false && !!l.castShadow)
+        : false;
       return (
         !!pl.renderer?.shadowMap?.enabled &&
-        !!pl.lighting?.directional?.enabled &&
-        !!pl.lighting?.directional?.shadow?.enabled
+        shadowsEnabled &&
+        (directionalCasts || directionalExtraCasts || pointCasts || spotCasts)
       );
     }),
   );

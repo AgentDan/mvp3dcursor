@@ -8,6 +8,60 @@ import { PanelLabPostFx } from './PanelLabPostFx.jsx';
 import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
 
 const DEF_DIR = DEFAULT_PANEL_LAB.lighting.directional;
+const DEF_SHADOW = DEFAULT_PANEL_LAB.lighting.shadows;
+
+function applyCommonShadow(light, shadows, lightType = 'directional') {
+  if (!light?.shadow || !shadows) return;
+  const ms = shadows.mapSize ?? DEF_SHADOW.mapSize;
+  light.shadow.mapSize.set(ms?.[0] ?? 2048, ms?.[1] ?? 2048);
+  const defaultBias = lightType === 'directional' ? DEF_SHADOW.bias : Math.max(0, DEF_SHADOW.bias);
+  const rawBias = typeof shadows.bias === 'number' ? shadows.bias : defaultBias;
+  // Spot/Point lights are much more sensitive to negative bias (acne).
+  light.shadow.bias = lightType === 'directional' ? rawBias : Math.max(0, rawBias);
+  const defaultNormalBias = lightType === 'directional' ? DEF_SHADOW.normalBias : Math.max(0.1, DEF_SHADOW.normalBias);
+  const rawNormalBias = typeof shadows.normalBias === 'number' ? shadows.normalBias : defaultNormalBias;
+  light.shadow.normalBias = lightType === 'directional' ? rawNormalBias : Math.max(0.1, rawNormalBias);
+  light.shadow.radius = typeof shadows.radius === 'number' ? shadows.radius : DEF_SHADOW.radius;
+  light.shadow.blurSamples = typeof shadows.blurSamples === 'number' ? shadows.blurSamples : DEF_SHADOW.blurSamples;
+}
+
+function applyShadowIntensity(light, shadowIntensity) {
+  if (!light?.shadow) return;
+  const n = Number(shadowIntensity);
+  light.shadow.intensity = Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1;
+}
+
+function applyDirectionalShadowCamera(light, shadows) {
+  const cam = light?.shadow?.camera;
+  const sc = shadows?.camera ?? DEF_SHADOW.camera;
+  if (!cam || !sc) return;
+  cam.near = typeof sc.near === 'number' ? sc.near : DEF_SHADOW.camera.near;
+  cam.far = typeof sc.far === 'number' ? sc.far : DEF_SHADOW.camera.far;
+  cam.left = typeof sc.left === 'number' ? sc.left : DEF_SHADOW.camera.left;
+  cam.right = typeof sc.right === 'number' ? sc.right : DEF_SHADOW.camera.right;
+  cam.top = typeof sc.top === 'number' ? sc.top : DEF_SHADOW.camera.top;
+  cam.bottom = typeof sc.bottom === 'number' ? sc.bottom : DEF_SHADOW.camera.bottom;
+  cam.updateProjectionMatrix();
+}
+
+function applySpotOrPointShadowCamera(light, shadows) {
+  const cam = light?.shadow?.camera;
+  const sc = shadows?.camera ?? DEF_SHADOW.camera;
+  if (!cam || !sc) return;
+  if (typeof sc.near === 'number') cam.near = sc.near;
+  if (typeof sc.far === 'number') cam.far = sc.far;
+  cam.updateProjectionMatrix();
+}
+
+function syncLightTarget(light, target) {
+  if (!light?.target || !Array.isArray(target)) return;
+  const [x = 0, y = 0, z = 0] = target;
+  light.target.position.set(x, y, z);
+  if (light.parent && light.target.parent !== light.parent) {
+    light.parent.add(light.target);
+  }
+  light.target.updateMatrixWorld();
+}
 
 export function ConfiguratorScene({ modelKey, requestId }) {
   const panelLab = useViewerSettingsStore((s) => s.panelLab);
@@ -15,6 +69,9 @@ export function ConfiguratorScene({ modelKey, requestId }) {
 
   const { camera: threeCamera } = useThree();
   const dirLightRef = useRef(null);
+  const extraDirRefs = useRef([]);
+  const pointRefs = useRef([]);
+  const spotRefs = useRef([]);
 
   const showSolidBackground = useMemo(() => {
     const bg = environment?.background;
@@ -54,39 +111,70 @@ export function ConfiguratorScene({ modelKey, requestId }) {
 
   const shadowMapEnabled = !!renderer?.shadowMap?.enabled;
   const shadowMapType = renderer?.shadowMap?.type;
+  const globalShadows = lighting?.shadows ?? DEF_SHADOW;
 
   useLayoutEffect(() => {
     const L = dirLightRef.current;
     const dir = lighting?.directional;
-    if (!L || !dir?.shadow?.enabled || !shadowMapEnabled) return;
+    if (!L || !globalShadows?.enabled || !shadowMapEnabled || dir?.castShadow === false) return;
 
-    const ms = dir.shadow.mapSize ?? DEF_DIR.shadow.mapSize;
-    L.shadow.mapSize.set(ms?.[0] ?? 2048, ms?.[1] ?? 2048);
-    L.shadow.bias = typeof dir.shadow.bias === 'number' ? dir.shadow.bias : DEF_DIR.shadow.bias;
-    L.shadow.normalBias =
-      typeof dir.shadow.normalBias === 'number' ? dir.shadow.normalBias : DEF_DIR.shadow.normalBias;
-    L.shadow.radius = typeof dir.shadow.radius === 'number' ? dir.shadow.radius : DEF_DIR.shadow.radius;
-    L.shadow.blurSamples =
-      typeof dir.shadow.blurSamples === 'number' ? dir.shadow.blurSamples : DEF_DIR.shadow.blurSamples;
+    applyCommonShadow(L, globalShadows, 'directional');
+    applyShadowIntensity(L, dir?.shadowIntensity);
 
-    const cam = L.shadow.camera;
-    const sc = dir.shadow.camera ?? DEF_DIR.shadow.camera;
-    if (cam && sc) {
-      cam.near = typeof sc.near === 'number' ? sc.near : DEF_DIR.shadow.camera.near;
-      cam.far = typeof sc.far === 'number' ? sc.far : DEF_DIR.shadow.camera.far;
-      cam.left = typeof sc.left === 'number' ? sc.left : DEF_DIR.shadow.camera.left;
-      cam.right = typeof sc.right === 'number' ? sc.right : DEF_DIR.shadow.camera.right;
-      cam.top = typeof sc.top === 'number' ? sc.top : DEF_DIR.shadow.camera.top;
-      cam.bottom = typeof sc.bottom === 'number' ? sc.bottom : DEF_DIR.shadow.camera.bottom;
-      cam.updateProjectionMatrix();
-    }
+    applyDirectionalShadowCamera(L, globalShadows);
+    syncLightTarget(L, Array.isArray(dir?.target) ? dir.target : DEF_DIR.target);
 
     L.shadow.needsUpdate = true;
-  }, [lighting?.directional, shadowMapEnabled, shadowMapType]);
+  }, [lighting?.directional, globalShadows, shadowMapEnabled, shadowMapType]);
 
   const fog = environment?.fog;
+  const directionalLights = lighting?.directionalLights ?? [];
   const pointLights = lighting?.pointLights ?? [];
   const spotLights = lighting?.spotLights ?? [];
+
+  useLayoutEffect(() => {
+    syncLightTarget(
+      dirLightRef.current,
+      Array.isArray(lighting?.directional?.target) ? lighting.directional.target : DEF_DIR.target,
+    );
+    directionalLights.forEach((dl, i) => {
+      syncLightTarget(extraDirRefs.current[i], Array.isArray(dl?.target) ? dl.target : DEF_DIR.target);
+    });
+    pointRefs.current = pointRefs.current.slice(0, pointLights.length);
+    spotLights.forEach((sl, i) => {
+      syncLightTarget(spotRefs.current[i], Array.isArray(sl?.target) ? sl.target : [0, 0, 0]);
+    });
+    spotRefs.current = spotRefs.current.slice(0, spotLights.length);
+    extraDirRefs.current = extraDirRefs.current.slice(0, directionalLights.length);
+  }, [lighting?.directional?.target, directionalLights, pointLights.length, spotLights]);
+
+  useLayoutEffect(() => {
+    if (!globalShadows?.enabled || !shadowMapEnabled) return;
+    directionalLights.forEach((dl, i) => {
+      const light = extraDirRefs.current[i];
+      if (!light || dl?.enabled === false || dl?.castShadow === false) return;
+      applyCommonShadow(light, globalShadows, 'directional');
+      applyShadowIntensity(light, dl?.shadowIntensity);
+      applyDirectionalShadowCamera(light, globalShadows);
+      light.shadow.needsUpdate = true;
+    });
+    pointLights.forEach((pl, i) => {
+      const light = pointRefs.current[i];
+      if (!light || pl?.enabled === false || !pl?.castShadow) return;
+      applyCommonShadow(light, globalShadows, 'point');
+      applyShadowIntensity(light, pl?.shadowIntensity);
+      applySpotOrPointShadowCamera(light, globalShadows);
+      light.shadow.needsUpdate = true;
+    });
+    spotLights.forEach((sl, i) => {
+      const light = spotRefs.current[i];
+      if (!light || sl?.enabled === false || !sl?.castShadow) return;
+      applyCommonShadow(light, globalShadows, 'spot');
+      applyShadowIntensity(light, sl?.shadowIntensity);
+      applySpotOrPointShadowCamera(light, globalShadows);
+      light.shadow.needsUpdate = true;
+    });
+  }, [directionalLights, pointLights, spotLights, globalShadows, shadowMapEnabled]);
 
   return (
     <>
@@ -134,26 +222,47 @@ export function ConfiguratorScene({ modelKey, requestId }) {
           position={
             Array.isArray(lighting.directional.position) ? lighting.directional.position : DEF_DIR.position
           }
-          castShadow={!!lighting.directional.shadow?.enabled && !!renderer?.shadowMap?.enabled}
-        >
-          <object3D
-            attach="target"
-            position={
-              Array.isArray(lighting.directional.target) ? lighting.directional.target : DEF_DIR.target
-            }
-          />
-        </directionalLight>
+          castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && lighting.directional.castShadow !== false}
+          onUpdate={(light) =>
+            syncLightTarget(
+              light,
+              Array.isArray(lighting.directional.target) ? lighting.directional.target : DEF_DIR.target,
+            )
+          }
+        />
       ) : null}
+
+      {directionalLights.map((dl, i) =>
+        dl && dl.enabled !== false ? (
+          <directionalLight
+            key={`dl-${i}`}
+            ref={(el) => {
+              extraDirRefs.current[i] = el;
+            }}
+            color={dl.color ?? DEF_DIR.color}
+            intensity={typeof dl.intensity === 'number' ? dl.intensity : DEF_DIR.intensity}
+            position={Array.isArray(dl.position) ? dl.position : DEF_DIR.position}
+            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && dl.castShadow !== false}
+            onUpdate={(light) => {
+              syncLightTarget(light, Array.isArray(dl.target) ? dl.target : DEF_DIR.target);
+            }}
+          />
+        ) : null,
+      )}
 
       {pointLights.map((pl, i) =>
         pl && pl.enabled !== false ? (
           <pointLight
             key={`pl-${i}`}
+            ref={(el) => {
+              pointRefs.current[i] = el;
+            }}
             color={pl.color ?? '#ffffff'}
             intensity={pl.intensity ?? 1}
             position={pl.position ?? [0, 0, 0]}
             distance={pl.distance}
             decay={pl.decay}
+            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && !!pl.castShadow}
           />
         ) : null,
       )}
@@ -162,6 +271,9 @@ export function ConfiguratorScene({ modelKey, requestId }) {
         sl && sl.enabled !== false ? (
           <spotLight
             key={`sl-${i}`}
+            ref={(el) => {
+              spotRefs.current[i] = el;
+            }}
             color={sl.color ?? '#ffffff'}
             intensity={sl.intensity ?? 1}
             position={sl.position ?? [0, 5, 0]}
@@ -169,9 +281,11 @@ export function ConfiguratorScene({ modelKey, requestId }) {
             penumbra={sl.penumbra ?? 0}
             distance={sl.distance}
             decay={sl.decay}
-          >
-            <object3D attach="target" position={sl.target ?? [0, 0, 0]} />
-          </spotLight>
+            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && !!sl.castShadow}
+            onUpdate={(light) => {
+              syncLightTarget(light, Array.isArray(sl.target) ? sl.target : [0, 0, 0]);
+            }}
+          />
         ) : null,
       )}
 

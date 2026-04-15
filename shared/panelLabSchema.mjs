@@ -47,29 +47,32 @@ export const DEFAULT_PANEL_LAB = {
     },
     directional: {
       enabled: true,
+      castShadow: true,
+      shadowIntensity: 1,
       color: '#ffffff',
       intensity: 2,
       position: [5, 10, 5],
       target: [0, 0, 0],
-      shadow: {
-        enabled: true,
-        mapSize: [2048, 2048],
-        /** VSM: small depth bias; rely more on normalBias for contact artefacts. */
-        bias: -0.00005,
-        /** Higher default reduces self-shadow acne when meshes both cast and receive. */
-        normalBias: 0.06,
-        /** VSM blur strength; Three docs: values > 1 visibly soften edges. */
-        radius: 8,
-        blurSamples: 16,
-        camera: {
-          near: 0.5,
-          far: 50,
-          /** Tighter ortho frustum → better texel density (less blocky edges). */
-          left: -6,
-          right: 6,
-          top: 6,
-          bottom: -6,
-        },
+    },
+    directionalLights: [],
+    shadows: {
+      enabled: true,
+      mapSize: [2048, 2048],
+      /** VSM: small depth bias; rely more on normalBias for contact artefacts. */
+      bias: -0.00005,
+      /** Higher default reduces self-shadow acne when meshes both cast and receive. */
+      normalBias: 0.06,
+      /** VSM blur strength; Three docs: values > 1 visibly soften edges. */
+      radius: 8,
+      blurSamples: 16,
+      camera: {
+        near: 0.5,
+        far: 50,
+        /** Tighter ortho frustum → better texel density (less blocky edges). */
+        left: -6,
+        right: 6,
+        top: 6,
+        bottom: -6,
       },
     },
     pointLights: [],
@@ -210,13 +213,74 @@ export function normalizePanelLabToEmbedded(raw) {
       shadowMap: { ...merged.renderer.shadowMap, type: 'VSMShadowMap' },
     };
   }
-  const dsh = merged.lighting?.directional?.shadow;
-  if (dsh?.enabled && Array.isArray(dsh.mapSize)) {
-    const w = Number(dsh.mapSize[0]);
-    const h = Number(dsh.mapSize[1]);
+  if (typeof merged.lighting?.directional?.castShadow !== 'boolean') {
+    const oldEnabled = merged.lighting?.directional?.shadow?.enabled;
+    merged.lighting.directional.castShadow = typeof oldEnabled === 'boolean' ? oldEnabled : true;
+  }
+  if (!isPlainObject(merged.lighting?.shadows)) {
+    merged.lighting.shadows = JSON.parse(JSON.stringify(defaults.lighting.shadows));
+  }
+  const oldShadow = merged.lighting?.directional?.shadow;
+  if (isPlainObject(oldShadow)) {
+    merged.lighting.shadows = deepMerge(merged.lighting.shadows, oldShadow);
+    const { directional } = merged.lighting;
+    const { shadow: _legacyShadow, ...restDirectional } = directional;
+    merged.lighting.directional = restDirectional;
+  }
+  const gsh = merged.lighting?.shadows;
+  if (gsh?.enabled && Array.isArray(gsh.mapSize)) {
+    const w = Number(gsh.mapSize[0]);
+    const h = Number(gsh.mapSize[1]);
     if (!Number.isFinite(w) || !Number.isFinite(h) || w < 512 || h < 512) {
-      dsh.mapSize = [2048, 2048];
+      gsh.mapSize = [2048, 2048];
     }
+  }
+  if (Array.isArray(merged.lighting?.pointLights)) {
+    merged.lighting.pointLights = merged.lighting.pointLights.map((pl) =>
+      isPlainObject(pl)
+        ? {
+            ...pl,
+            castShadow: typeof pl.castShadow === 'boolean' ? pl.castShadow : false,
+            shadowIntensity: Number.isFinite(Number(pl.shadowIntensity))
+              ? Math.max(0, Math.min(1, Number(pl.shadowIntensity)))
+              : 1,
+          }
+        : pl,
+    );
+  }
+  if (Array.isArray(merged.lighting?.spotLights)) {
+    merged.lighting.spotLights = merged.lighting.spotLights.map((sl) =>
+      isPlainObject(sl)
+        ? {
+            ...sl,
+            castShadow: typeof sl.castShadow === 'boolean' ? sl.castShadow : false,
+            shadowIntensity: Number.isFinite(Number(sl.shadowIntensity))
+              ? Math.max(0, Math.min(1, Number(sl.shadowIntensity)))
+              : 1,
+          }
+        : sl,
+    );
+  }
+  if (!Array.isArray(merged.lighting?.directionalLights)) {
+    merged.lighting.directionalLights = [];
+  } else {
+    merged.lighting.directionalLights = merged.lighting.directionalLights.map((dl) =>
+      isPlainObject(dl)
+        ? {
+            ...defaults.lighting.directional,
+            ...dl,
+            castShadow: typeof dl.castShadow === 'boolean' ? dl.castShadow : false,
+            shadowIntensity: Number.isFinite(Number(dl.shadowIntensity))
+              ? Math.max(0, Math.min(1, Number(dl.shadowIntensity)))
+              : 1,
+          }
+        : JSON.parse(JSON.stringify(defaults.lighting.directional)),
+    );
+  }
+  if (Number.isFinite(Number(merged.lighting?.directional?.shadowIntensity))) {
+    merged.lighting.directional.shadowIntensity = Math.max(0, Math.min(1, Number(merged.lighting.directional.shadowIntensity)));
+  } else if (merged.lighting?.directional) {
+    merged.lighting.directional.shadowIntensity = 1;
   }
   return merged;
 }
