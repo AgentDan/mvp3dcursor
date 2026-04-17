@@ -2,6 +2,8 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Environment, OrbitControls } from '@react-three/drei';
 import { ConfiguratorModel } from './ConfiguratorModel.jsx';
+import { PanelLabLightHelpers } from './PanelLabLightHelpers.jsx';
+import { useLabKeyFromLocation } from './panelLab/useLabKeyFromLocation.js';
 import { useViewerSettingsStore } from '../../../shared/scene/viewerSettingsStore.js';
 import { PanelLabGLSync } from './PanelLabGLSync.jsx';
 import { PanelLabPostFx } from './PanelLabPostFx.jsx';
@@ -65,6 +67,7 @@ function syncLightTarget(light, target) {
 
 export function ConfiguratorScene({ modelKey, requestId }) {
   const panelLab = useViewerSettingsStore((s) => s.panelLab);
+  const labKey = useLabKeyFromLocation();
   const { environment, lighting, ground, renderer, postprocessing, camera, controls } = panelLab;
 
   const { camera: threeCamera } = useThree();
@@ -288,6 +291,8 @@ export function ConfiguratorScene({ modelKey, requestId }) {
           />
         ) : null,
       )}
+
+      {labKey ? <PanelLabLightHelpers lighting={lighting} /> : null}
 
       {ground?.enabled ? (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
