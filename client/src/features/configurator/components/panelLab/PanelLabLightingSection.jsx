@@ -1,9 +1,11 @@
+import { useId, useState } from 'react';
 import { PanelLabNumberInput } from './PanelLabNumberInput.jsx';
 import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
 
 const DEF_SHADOW = DEFAULT_PANEL_LAB.lighting.shadows;
 const DEF_POINT = {
-  enabled: true,
+  name: '',
+  enabled: false,
   color: '#ffffff',
   intensity: 1,
   position: [0, 3, 0],
@@ -13,7 +15,8 @@ const DEF_POINT = {
   shadowIntensity: 1,
 };
 const DEF_SPOT = {
-  enabled: true,
+  name: '',
+  enabled: false,
   color: '#ffffff',
   intensity: 1,
   position: [0, 5, 0],
@@ -25,6 +28,80 @@ const DEF_SPOT = {
   castShadow: false,
   shadowIntensity: 1,
 };
+
+/** Collapsible light card: header shows name, On, Delete. */
+function PanelLabLightSubEntity({
+  defaultOpen = false,
+  name,
+  fallbackName,
+  enabled,
+  onNameChange,
+  onEnabledChange,
+  onDelete,
+  children,
+}) {
+  const reactId = useId();
+  const regionId = `panel-lab-light-sub-${reactId.replace(/:/g, '')}`;
+  const [open, setOpen] = useState(defaultOpen);
+  const toggle = () => setOpen((v) => !v);
+
+  return (
+    <div className="overflow-hidden rounded border border-gray-500/35 bg-white/35">
+      <div className="border-b border-gray-500/25 bg-white/20 px-2 py-1.5">
+        <div className="text-[9px] font-medium uppercase tracking-wide text-gray-500">Sub-entity</div>
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={regionId}
+            onClick={toggle}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-gray-500/50 bg-white/90 text-gray-800 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-600/40"
+            title={open ? 'Collapse' : 'Expand'}
+          >
+            <svg
+              className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <input
+            type="text"
+            value={typeof name === 'string' ? name : ''}
+            placeholder={fallbackName}
+            onChange={(e) => onNameChange(e.target.value)}
+            className="min-w-0 flex-1 rounded border border-gray-500/50 bg-white/95 px-1.5 py-0.5 text-[11px] text-gray-900 placeholder:text-gray-400"
+            aria-label="Sub-entity name"
+          />
+          <label className="flex shrink-0 cursor-pointer items-center gap-1 rounded border border-gray-500/45 bg-white/90 px-1.5 py-0.5 text-[10px] text-gray-800">
+            <input
+              type="checkbox"
+              className="rounded border-gray-400"
+              checked={enabled !== false}
+              onChange={(e) => onEnabledChange(e.target.checked)}
+            />
+            On
+          </label>
+          <button
+            type="button"
+            className="shrink-0 rounded border border-rose-500/60 bg-white/90 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
+            onClick={onDelete}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+      {open ? (
+        <div id={regionId} role="region" className="space-y-2 p-2">
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function PanelLabAmbientLightingSection({ lighting, patchLighting }) {
   const amb = lighting.ambient;
@@ -431,34 +508,40 @@ export function PanelLabPointLightsSection({ lighting, patchLighting }) {
     patchLighting({ pointLights: pointLights.map((item, i) => (i === idx ? { ...item, ...patch } : item)) });
   };
   const removePoint = (idx) => patchLighting({ pointLights: pointLights.filter((_, i) => i !== idx) });
-  const addPoint = () => patchLighting({ pointLights: [...pointLights, { ...DEF_POINT }] });
+  const addPoint = () => {
+    const n = pointLights.length + 1;
+    patchLighting({ pointLights: [...pointLights, { ...DEF_POINT, name: `Point light ${n}` }] });
+  };
 
   return (
     <div className="space-y-2">
       <button
         type="button"
-        className="rounded border border-gray-500/60 bg-white/90 px-2 py-1 text-[11px] text-gray-900 hover:bg-white"
+        aria-label="Add point light"
+        className="flex h-7 min-w-[1.75rem] items-center justify-center rounded border border-gray-500/60 bg-white/90 px-2 text-base font-medium leading-none text-gray-900 hover:bg-white"
         onClick={addPoint}
       >
-        + Add point light
+        +
       </button>
       {pointLights.map((pl, idx) => (
-        <div key={`pl-${idx}`} className="space-y-2 rounded border border-gray-500/35 bg-white/35 p-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-600">Point {idx + 1}</div>
-            <button
-              type="button"
-              className="rounded border border-rose-500/60 bg-white/90 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
-              onClick={() => removePoint(idx)}
-            >
-              Delete
-            </button>
-          </div>
-          <label className="flex items-center gap-2 text-[11px] text-gray-700">
-            <input type="checkbox" checked={pl.enabled !== false} onChange={(e) => updatePoint(idx, { enabled: e.target.checked })} />
-            On
-          </label>
-          <PanelLabNumberInput label="Intensity" value={pl.intensity ?? DEF_POINT.intensity} min={0} max={20} step={0.1} onChange={(v) => updatePoint(idx, { intensity: v })} />
+        <PanelLabLightSubEntity
+          key={`pl-${idx}`}
+          defaultOpen={false}
+          name={pl.name}
+          fallbackName={`Point light ${idx + 1}`}
+          enabled={pl.enabled !== false}
+          onNameChange={(v) => updatePoint(idx, { name: v })}
+          onEnabledChange={(on) => updatePoint(idx, { enabled: on })}
+          onDelete={() => removePoint(idx)}
+        >
+          <PanelLabNumberInput
+            label="Intensity"
+            value={pl.intensity ?? DEF_POINT.intensity}
+            min={0}
+            max={20}
+            step={0.1}
+            onChange={(v) => updatePoint(idx, { intensity: v })}
+          />
           <label className="flex flex-col gap-0.5 text-[11px] text-gray-700">
             <span>Color</span>
             <input
@@ -486,7 +569,14 @@ export function PanelLabPointLightsSection({ lighting, patchLighting }) {
             ))}
           </div>
           <div className="grid grid-cols-2 gap-1">
-            <PanelLabNumberInput label="Distance" value={pl.distance ?? DEF_POINT.distance} min={0} max={500} step={0.5} onChange={(v) => updatePoint(idx, { distance: v })} />
+            <PanelLabNumberInput
+              label="Distance"
+              value={pl.distance ?? DEF_POINT.distance}
+              min={0}
+              max={500}
+              step={0.5}
+              onChange={(v) => updatePoint(idx, { distance: v })}
+            />
             <PanelLabNumberInput label="Decay" value={pl.decay ?? DEF_POINT.decay} min={0} max={4} step={0.1} onChange={(v) => updatePoint(idx, { decay: v })} />
           </div>
           <label className="flex items-center gap-2 text-[11px] text-gray-700">
@@ -503,7 +593,7 @@ export function PanelLabPointLightsSection({ lighting, patchLighting }) {
               onChange={(v) => updatePoint(idx, { shadowIntensity: v })}
             />
           ) : null}
-        </div>
+        </PanelLabLightSubEntity>
       ))}
     </div>
   );
@@ -515,34 +605,40 @@ export function PanelLabSpotLightsSection({ lighting, patchLighting }) {
     patchLighting({ spotLights: spotLights.map((item, i) => (i === idx ? { ...item, ...patch } : item)) });
   };
   const removeSpot = (idx) => patchLighting({ spotLights: spotLights.filter((_, i) => i !== idx) });
-  const addSpot = () => patchLighting({ spotLights: [...spotLights, { ...DEF_SPOT }] });
+  const addSpot = () => {
+    const n = spotLights.length + 1;
+    patchLighting({ spotLights: [...spotLights, { ...DEF_SPOT, name: `Spot light ${n}` }] });
+  };
 
   return (
     <div className="space-y-2">
       <button
         type="button"
-        className="rounded border border-gray-500/60 bg-white/90 px-2 py-1 text-[11px] text-gray-900 hover:bg-white"
+        aria-label="Add spot light"
+        className="flex h-7 min-w-[1.75rem] items-center justify-center rounded border border-gray-500/60 bg-white/90 px-2 text-base font-medium leading-none text-gray-900 hover:bg-white"
         onClick={addSpot}
       >
-        + Add spot light
+        +
       </button>
       {spotLights.map((sl, idx) => (
-        <div key={`sl-${idx}`} className="space-y-2 rounded border border-gray-500/35 bg-white/35 p-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-600">Spot {idx + 1}</div>
-            <button
-              type="button"
-              className="rounded border border-rose-500/60 bg-white/90 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
-              onClick={() => removeSpot(idx)}
-            >
-              Delete
-            </button>
-          </div>
-          <label className="flex items-center gap-2 text-[11px] text-gray-700">
-            <input type="checkbox" checked={sl.enabled !== false} onChange={(e) => updateSpot(idx, { enabled: e.target.checked })} />
-            On
-          </label>
-          <PanelLabNumberInput label="Intensity" value={sl.intensity ?? DEF_SPOT.intensity} min={0} max={20} step={0.1} onChange={(v) => updateSpot(idx, { intensity: v })} />
+        <PanelLabLightSubEntity
+          key={`sl-${idx}`}
+          defaultOpen={false}
+          name={sl.name}
+          fallbackName={`Spot light ${idx + 1}`}
+          enabled={sl.enabled !== false}
+          onNameChange={(v) => updateSpot(idx, { name: v })}
+          onEnabledChange={(on) => updateSpot(idx, { enabled: on })}
+          onDelete={() => removeSpot(idx)}
+        >
+          <PanelLabNumberInput
+            label="Intensity"
+            value={sl.intensity ?? DEF_SPOT.intensity}
+            min={0}
+            max={20}
+            step={0.1}
+            onChange={(v) => updateSpot(idx, { intensity: v })}
+          />
           <label className="flex flex-col gap-0.5 text-[11px] text-gray-700">
             <span>Color</span>
             <input
@@ -587,9 +683,23 @@ export function PanelLabSpotLightsSection({ lighting, patchLighting }) {
             ))}
           </div>
           <div className="grid grid-cols-2 gap-1">
-            <PanelLabNumberInput label="Angle (rad)" value={sl.angle ?? DEF_SPOT.angle} min={0.01} max={Math.PI / 2} step={0.01} onChange={(v) => updateSpot(idx, { angle: v })} />
+            <PanelLabNumberInput
+              label="Angle (rad)"
+              value={sl.angle ?? DEF_SPOT.angle}
+              min={0.01}
+              max={Math.PI / 2}
+              step={0.01}
+              onChange={(v) => updateSpot(idx, { angle: v })}
+            />
             <PanelLabNumberInput label="Penumbra" value={sl.penumbra ?? DEF_SPOT.penumbra} min={0} max={1} step={0.01} onChange={(v) => updateSpot(idx, { penumbra: v })} />
-            <PanelLabNumberInput label="Distance" value={sl.distance ?? DEF_SPOT.distance} min={0} max={500} step={0.5} onChange={(v) => updateSpot(idx, { distance: v })} />
+            <PanelLabNumberInput
+              label="Distance"
+              value={sl.distance ?? DEF_SPOT.distance}
+              min={0}
+              max={500}
+              step={0.5}
+              onChange={(v) => updateSpot(idx, { distance: v })}
+            />
             <PanelLabNumberInput label="Decay" value={sl.decay ?? DEF_SPOT.decay} min={0} max={4} step={0.1} onChange={(v) => updateSpot(idx, { decay: v })} />
           </div>
           <label className="flex items-center gap-2 text-[11px] text-gray-700">
@@ -606,7 +716,7 @@ export function PanelLabSpotLightsSection({ lighting, patchLighting }) {
               onChange={(v) => updateSpot(idx, { shadowIntensity: v })}
             />
           ) : null}
-        </div>
+        </PanelLabLightSubEntity>
       ))}
     </div>
   );
