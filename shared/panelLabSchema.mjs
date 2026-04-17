@@ -47,6 +47,8 @@ export const DEFAULT_PANEL_LAB = {
     },
     directional: {
       enabled: true,
+      /** Viewport overlay in Lab (position → target). */
+      sceneHelper: true,
       castShadow: true,
       shadowIntensity: 1,
       color: '#ffffff',

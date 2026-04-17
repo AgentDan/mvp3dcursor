@@ -3,9 +3,31 @@ import { PanelLabNumberInput } from './PanelLabNumberInput.jsx';
 import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
 
 const DEF_SHADOW = DEFAULT_PANEL_LAB.lighting.shadows;
+
+function PanelLabDeleteIconButton({ onClick, className = '' }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Delete"
+      title="Delete"
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border border-rose-500/60 bg-white/90 text-rose-700 hover:bg-rose-50 ${className}`.trim()}
+    >
+      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+        />
+      </svg>
+    </button>
+  );
+}
 const DEF_POINT = {
   name: '',
   enabled: false,
+  sceneHelper: true,
   color: '#ffffff',
   intensity: 1,
   position: [0, 3, 0],
@@ -17,6 +39,7 @@ const DEF_POINT = {
 const DEF_SPOT = {
   name: '',
   enabled: false,
+  sceneHelper: true,
   color: '#ffffff',
   intensity: 1,
   position: [0, 5, 0],
@@ -29,7 +52,7 @@ const DEF_SPOT = {
   shadowIntensity: 1,
 };
 
-/** Collapsible light card: header shows name, On, Delete. */
+/** Collapsible light card: header shows name, On, hlp, trash delete. */
 function PanelLabLightSubEntity({
   defaultOpen = false,
   name,
@@ -38,6 +61,8 @@ function PanelLabLightSubEntity({
   onNameChange,
   onEnabledChange,
   onDelete,
+  sceneHelper = true,
+  onSceneHelperChange,
   children,
 }) {
   const reactId = useId();
@@ -85,13 +110,19 @@ function PanelLabLightSubEntity({
             />
             On
           </label>
-          <button
-            type="button"
-            className="shrink-0 rounded border border-rose-500/60 bg-white/90 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
-            onClick={onDelete}
-          >
-            Delete
-          </button>
+          {onSceneHelperChange ? (
+            <label className="flex shrink-0 cursor-pointer items-center gap-1 rounded border border-sky-500/40 bg-white/90 px-1.5 py-0.5 text-[10px] text-gray-800">
+              <input
+                type="checkbox"
+                className="rounded border-gray-400"
+                checked={sceneHelper !== false}
+                onChange={(e) => onSceneHelperChange(e.target.checked)}
+                aria-label="Viewport helper overlay"
+              />
+              hlp
+            </label>
+          ) : null}
+          <PanelLabDeleteIconButton onClick={onDelete} />
         </div>
       </div>
       {open ? (
@@ -196,6 +227,18 @@ export function PanelLabDirectionalLightingSection({ lighting, patchLighting }) 
         />
         On
       </label>
+      <label
+        className="flex items-center gap-2 text-[11px] text-gray-700"
+        title="Lab viewport: spheres at lamp and target, line between (direction)."
+      >
+        <input
+          type="checkbox"
+          checked={dir.sceneHelper !== false}
+          onChange={(e) => patchLighting({ directional: { ...dir, sceneHelper: e.target.checked } })}
+          aria-label="Viewport helper overlay"
+        />
+        hlp
+      </label>
       <PanelLabNumberInput
         label="Intensity"
         value={dir.intensity}
@@ -212,11 +255,32 @@ export function PanelLabDirectionalLightingSection({ lighting, patchLighting }) 
             value={dir.position[i]}
             min={-50}
             max={50}
-            step={0.5}
+            step={0.01}
             onChange={(v) => {
               const next = [...dir.position];
               next[i] = v;
               patchLighting({ directional: { ...dir, position: next } });
+            }}
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {['X', 'Y', 'Z'].map((axis, i) => (
+          <PanelLabNumberInput
+            key={`tgt-${axis}`}
+            label={`Target ${axis}`}
+            value={
+              Array.isArray(dir.target) ? dir.target[i] : DEFAULT_PANEL_LAB.lighting.directional.target[i]
+            }
+            min={-50}
+            max={50}
+            step={0.01}
+            onChange={(v) => {
+              const base = Array.isArray(dir.target)
+                ? [...dir.target]
+                : [...DEFAULT_PANEL_LAB.lighting.directional.target];
+              base[i] = v;
+              patchLighting({ directional: { ...dir, target: base } });
             }}
           />
         ))}
@@ -252,13 +316,7 @@ export function PanelLabDirectionalLightingSection({ lighting, patchLighting }) 
             <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-600">
               Directional {idx + 1}
             </div>
-            <button
-              type="button"
-              className="rounded border border-rose-500/60 bg-white/90 px-2 py-0.5 text-[10px] text-rose-700 hover:bg-rose-50"
-              onClick={() => removeExtraDirectional(idx)}
-            >
-              Delete
-            </button>
+            <PanelLabDeleteIconButton onClick={() => removeExtraDirectional(idx)} />
           </div>
           <label className="flex items-center gap-2 text-[11px] text-gray-700">
             <input
@@ -267,6 +325,18 @@ export function PanelLabDirectionalLightingSection({ lighting, patchLighting }) 
               onChange={(e) => patchExtraDirectional(idx, { enabled: e.target.checked })}
             />
             On
+          </label>
+          <label
+            className="flex items-center gap-2 text-[11px] text-gray-700"
+            title="Lab viewport: spheres at lamp and target, line between (direction)."
+          >
+            <input
+              type="checkbox"
+              checked={item.sceneHelper !== false}
+              onChange={(e) => patchExtraDirectional(idx, { sceneHelper: e.target.checked })}
+              aria-label="Viewport helper overlay"
+            />
+            hlp
           </label>
           <PanelLabNumberInput
             label="Intensity"
@@ -284,13 +354,32 @@ export function PanelLabDirectionalLightingSection({ lighting, patchLighting }) 
                 value={item.position?.[i] ?? DEFAULT_PANEL_LAB.lighting.directional.position[i]}
                 min={-50}
                 max={50}
-                step={0.5}
+                step={0.01}
                 onChange={(v) => {
                   const next = Array.isArray(item.position)
                     ? [...item.position]
                     : [...DEFAULT_PANEL_LAB.lighting.directional.position];
                   next[i] = v;
                   patchExtraDirectional(idx, { position: next });
+                }}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-1">
+            {['X', 'Y', 'Z'].map((axis, i) => (
+              <PanelLabNumberInput
+                key={`extra-tgt-${axis}`}
+                label={`Target ${axis}`}
+                value={item.target?.[i] ?? DEFAULT_PANEL_LAB.lighting.directional.target[i]}
+                min={-50}
+                max={50}
+                step={0.01}
+                onChange={(v) => {
+                  const next = Array.isArray(item.target)
+                    ? [...item.target]
+                    : [...DEFAULT_PANEL_LAB.lighting.directional.target];
+                  next[i] = v;
+                  patchExtraDirectional(idx, { target: next });
                 }}
               />
             ))}
@@ -533,6 +622,8 @@ export function PanelLabPointLightsSection({ lighting, patchLighting }) {
           onNameChange={(v) => updatePoint(idx, { name: v })}
           onEnabledChange={(on) => updatePoint(idx, { enabled: on })}
           onDelete={() => removePoint(idx)}
+          sceneHelper={pl.sceneHelper}
+          onSceneHelperChange={(on) => updatePoint(idx, { sceneHelper: on })}
         >
           <PanelLabNumberInput
             label="Intensity"
@@ -559,7 +650,7 @@ export function PanelLabPointLightsSection({ lighting, patchLighting }) {
                 value={pl.position?.[i] ?? DEF_POINT.position[i]}
                 min={-50}
                 max={50}
-                step={0.5}
+                step={0.01}
                 onChange={(v) => {
                   const next = Array.isArray(pl.position) ? [...pl.position] : [...DEF_POINT.position];
                   next[i] = v;
@@ -630,6 +721,8 @@ export function PanelLabSpotLightsSection({ lighting, patchLighting }) {
           onNameChange={(v) => updateSpot(idx, { name: v })}
           onEnabledChange={(on) => updateSpot(idx, { enabled: on })}
           onDelete={() => removeSpot(idx)}
+          sceneHelper={sl.sceneHelper}
+          onSceneHelperChange={(on) => updateSpot(idx, { sceneHelper: on })}
         >
           <PanelLabNumberInput
             label="Intensity"
@@ -656,7 +749,7 @@ export function PanelLabSpotLightsSection({ lighting, patchLighting }) {
                 value={sl.position?.[i] ?? DEF_SPOT.position[i]}
                 min={-50}
                 max={50}
-                step={0.5}
+                step={0.01}
                 onChange={(v) => {
                   const next = Array.isArray(sl.position) ? [...sl.position] : [...DEF_SPOT.position];
                   next[i] = v;
@@ -673,7 +766,7 @@ export function PanelLabSpotLightsSection({ lighting, patchLighting }) {
                 value={sl.target?.[i] ?? DEF_SPOT.target[i]}
                 min={-50}
                 max={50}
-                step={0.5}
+                step={0.01}
                 onChange={(v) => {
                   const next = Array.isArray(sl.target) ? [...sl.target] : [...DEF_SPOT.target];
                   next[i] = v;
