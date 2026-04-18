@@ -1,7 +1,30 @@
 export const PANEL_LAB_VERSION = 1;
 
+/** Hard cap on annotation count (panel + glTF). */
+export const ANNOTATIONS_MAX_ITEMS = 10;
+
 function isPlainObject(v) {
   return v != null && typeof v === 'object' && !Array.isArray(v);
+}
+
+/**
+ * Default camera position is [0,0,0] in schema; OrbitControls needs a non-zero offset from target.
+ * If position and orbit target coincide, nudge camera along +Z (only in resolved panelLab).
+ */
+function finalizeCameraOrbit(panelLab) {
+  const cam = panelLab?.camera;
+  const ctl = panelLab?.controls;
+  if (!isPlainObject(cam) || !Array.isArray(cam.position) || !isPlainObject(ctl) || !Array.isArray(ctl.target)) {
+    return;
+  }
+  const c = cam.position.map((n) => Number(n) || 0);
+  const t = ctl.target.map((n) => Number(n) || 0);
+  const dx = c[0] - t[0];
+  const dy = c[1] - t[1];
+  const dz = c[2] - t[2];
+  if (dx * dx + dy * dy + dz * dz < 1e-8) {
+    cam.position = [0, 0, 6];
+  }
 }
 
 export const DEFAULT_PANEL_LAB = {
@@ -35,7 +58,7 @@ export const DEFAULT_PANEL_LAB = {
 
   lighting: {
     ambient: {
-      enabled: true,
+      enabled: false,
       intensity: 0.6,
       color: '#ffffff',
     },
@@ -46,9 +69,10 @@ export const DEFAULT_PANEL_LAB = {
       intensity: 0.5,
     },
     directional: {
-      enabled: true,
+      enabled: false,
       /** Viewport overlay in Lab (position → target). */
-      sceneHelper: true,
+      sceneHelper: false,
+      /** When light + global shadows are on, meshes cast without an extra Panel Lab click. */
       castShadow: true,
       shadowIntensity: 1,
       color: '#ffffff',
@@ -58,7 +82,7 @@ export const DEFAULT_PANEL_LAB = {
     },
     directionalLights: [],
     shadows: {
-      enabled: true,
+      enabled: false,
       mapSize: [2048, 2048],
       /** VSM: small depth bias; rely more on normalBias for contact artefacts. */
       bias: -0.00005,
@@ -94,11 +118,11 @@ export const DEFAULT_PANEL_LAB = {
 
   renderer: {
     physicallyCorrectLights: true,
-    toneMapping: 'ACESFilmicToneMapping',
-    toneMappingExposure: 1.2,
-    outputColorSpace: 'SRGBColorSpace',
+    toneMapping: 'NoToneMapping',
+    toneMappingExposure: 1,
+    outputColorSpace: 'NoColorSpace',
     shadowMap: {
-      enabled: true,
+      enabled: false,
       /** PCFSoft is deprecated in Three r182 (treated as PCF). VSM enables radius + blurSamples. */
       type: 'VSMShadowMap',
     },
@@ -133,25 +157,55 @@ export const DEFAULT_PANEL_LAB = {
   },
 
   camera: {
-    position: [4, 3, 4],
+    position: [0, 0, 0],
     fov: 50,
     near: 0.1,
     far: 1000,
   },
 
   controls: {
-    minDistance: 2,
+    /** OrbitControls.target — center the camera orbits around. */
+    target: [0, 0, 0],
+    /** World point the camera aims at (after orbit; independent of target). */
+    lookTarget: [0, 0, 0],
+    minDistance: 0,
     maxDistance: 10,
     dampingFactor: 0.05,
     enableDamping: true,
     enablePan: true,
     enableZoom: true,
     enableRotate: true,
+    /** OrbitControls pointer sensitivities (Three.js defaults = 1). */
+    rotateSpeed: 1,
+    zoomSpeed: 1,
+    panSpeed: 1,
+    /** Polar angle limits (radians): 0 = +Y pole, π = −Y pole. */
+    minPolarAngle: 0,
+    maxPolarAngle: Math.PI,
+    /** Azimuth limits (radians) around target. ±2π default is effectively full horizontal spin for JSON-safe embeds. */
+    minAzimuthAngle: -Math.PI * 2,
+    maxAzimuthAngle: Math.PI * 2,
+  },
+
+  annotations: {
+    enabled: false,
+    items: [
+      {
+        id: 'ann-0',
+        label: '',
+        /** Markdown body (react-markdown in viewer). */
+        text: '',
+        position: [0, 0, 0],
+        visible: true,
+      },
+    ],
   },
 };
 
 export function cloneDefaultPanelLab() {
-  return JSON.parse(JSON.stringify(DEFAULT_PANEL_LAB));
+  const o = JSON.parse(JSON.stringify(DEFAULT_PANEL_LAB));
+  finalizeCameraOrbit(o);
+  return o;
 }
 
 /** Deep merge objects recursively; arrays and primitives from patch replace. */
@@ -242,7 +296,7 @@ export function normalizePanelLabToEmbedded(raw) {
       isPlainObject(pl)
         ? {
             ...pl,
-            castShadow: typeof pl.castShadow === 'boolean' ? pl.castShadow : false,
+            castShadow: typeof pl.castShadow === 'boolean' ? pl.castShadow : true,
             shadowIntensity: Number.isFinite(Number(pl.shadowIntensity))
               ? Math.max(0, Math.min(1, Number(pl.shadowIntensity)))
               : 1,
@@ -255,7 +309,7 @@ export function normalizePanelLabToEmbedded(raw) {
       isPlainObject(sl)
         ? {
             ...sl,
-            castShadow: typeof sl.castShadow === 'boolean' ? sl.castShadow : false,
+            castShadow: typeof sl.castShadow === 'boolean' ? sl.castShadow : true,
             shadowIntensity: Number.isFinite(Number(sl.shadowIntensity))
               ? Math.max(0, Math.min(1, Number(sl.shadowIntensity)))
               : 1,
@@ -284,6 +338,81 @@ export function normalizePanelLabToEmbedded(raw) {
   } else if (merged.lighting?.directional) {
     merged.lighting.directional.shadowIntensity = 1;
   }
+  // Legacy: camera.target → controls.target + controls.lookTarget; strip camera.target.
+  if (isPlainObject(merged.camera) && Array.isArray(merged.camera.target)) {
+    const legacy = merged.camera.target.slice();
+    if (isPlainObject(merged.controls) && !Array.isArray(raw?.controls?.target)) {
+      merged.controls.target = legacy.slice();
+    }
+    if (
+      isPlainObject(merged.controls) &&
+      !Array.isArray(raw?.controls?.lookTarget) &&
+      !(isPlainObject(raw?.camera) && Array.isArray(raw.camera.lookTarget))
+    ) {
+      merged.controls.lookTarget = legacy.slice();
+    }
+    const { target: _legacyCamTarget, ...camRest } = merged.camera;
+    merged.camera = camRest;
+  }
+  // Move look-at off camera onto controls (camera = lens + position only).
+  if (isPlainObject(merged.camera) && isPlainObject(merged.controls)) {
+    if (Array.isArray(merged.camera.lookTarget)) {
+      if (!Array.isArray(raw?.controls?.lookTarget)) {
+        merged.controls.lookTarget = merged.camera.lookTarget.slice();
+      }
+      const { lookTarget: _lt, ...camRest } = merged.camera;
+      merged.camera = camRest;
+    }
+    if ('sceneHelper' in merged.camera) {
+      const { sceneHelper: _csh, ...camRest2 } = merged.camera;
+      merged.camera = camRest2;
+    }
+  }
+  if (isPlainObject(merged.controls)) {
+    const {
+      orbitTargetHelper: _legacyOh,
+      sceneHelper: _orbitH,
+      lookAtHelper: _lookH,
+      ...restControls
+    } = merged.controls;
+    merged.controls = restControls;
+  }
+
+  const defAnn = defaults.annotations;
+  if (!isPlainObject(merged.annotations)) {
+    merged.annotations = JSON.parse(JSON.stringify(defAnn));
+  } else {
+    merged.annotations.enabled = merged.annotations.enabled === true;
+    const template = defAnn.items[0];
+    const rawItems = Array.isArray(merged.annotations.items) ? merged.annotations.items : [];
+    const capped = rawItems.slice(0, ANNOTATIONS_MAX_ITEMS);
+    const normalizedItems = capped.map((it, idx) => {
+      const o = isPlainObject(it) ? { ...template, ...it } : { ...template };
+      const pos = Array.isArray(o.position) ? o.position.map((n) => Number(n) || 0) : [0, 0, 0];
+      o.position = pos.slice(0, 3);
+      if (o.position.length < 3) {
+        while (o.position.length < 3) o.position.push(0);
+      }
+      o.id = typeof o.id === 'string' && o.id.trim() ? o.id.trim() : `ann-${idx}`;
+      o.label = typeof o.label === 'string' ? o.label : '';
+      o.text = typeof o.text === 'string' ? o.text : '';
+      o.visible = o.visible !== false;
+      return o;
+    });
+    merged.annotations.items =
+      normalizedItems.length > 0 ? normalizedItems : JSON.parse(JSON.stringify(defAnn.items));
+    const seenIds = new Set();
+    merged.annotations.items = merged.annotations.items.map((o, idx) => {
+      let id = o.id;
+      if (seenIds.has(id)) {
+        id = `ann-${idx}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+      seenIds.add(id);
+      return { ...o, id };
+    });
+  }
+
+  finalizeCameraOrbit(merged);
   return merged;
 }
 

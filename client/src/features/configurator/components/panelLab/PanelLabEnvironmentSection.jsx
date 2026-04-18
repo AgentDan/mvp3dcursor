@@ -101,7 +101,7 @@ export function PanelLabEnvironmentSection({ environment, patchEnvironment }) {
           value={fog.near}
           min={0}
           max={200}
-          step={1}
+          step={0.1}
           onChange={(v) => patchEnvironment({ fog: { ...fog, near: v } })}
         />
         <PanelLabNumberInput
@@ -109,7 +109,7 @@ export function PanelLabEnvironmentSection({ environment, patchEnvironment }) {
           value={fog.far}
           min={0}
           max={500}
-          step={1}
+          step={0.1}
           onChange={(v) => patchEnvironment({ fog: { ...fog, far: v } })}
         />
       </div>

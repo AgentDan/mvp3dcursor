@@ -27,13 +27,13 @@ function PanelLabDeleteIconButton({ onClick, className = '' }) {
 const DEF_POINT = {
   name: '',
   enabled: false,
-  sceneHelper: true,
+  sceneHelper: false,
   color: '#ffffff',
   intensity: 1,
   position: [0, 3, 0],
   distance: 0,
   decay: 2,
-  castShadow: false,
+  castShadow: true,
   shadowIntensity: 1,
 };
 const DEF_SPOT = {
@@ -48,7 +48,7 @@ const DEF_SPOT = {
   penumbra: 0,
   distance: 0,
   decay: 2,
-  castShadow: false,
+  castShadow: true,
   shadowIntensity: 1,
 };
 
@@ -61,7 +61,7 @@ function PanelLabLightSubEntity({
   onNameChange,
   onEnabledChange,
   onDelete,
-  sceneHelper = true,
+  sceneHelper = false,
   onSceneHelperChange,
   children,
 }) {

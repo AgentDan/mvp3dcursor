@@ -1,0 +1,176 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "01_mvp3Dcursor"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": []
+    }
+  ],
+  "nodes": [],
+  "extras": {
+    "panelLab": {
+      "version": 1,
+      "environment": {
+        "background": {
+          "type": "color",
+          "color": "#e5e7eb",
+          "blur": 0,
+          "intensity": 1
+        },
+        "hdri": {
+          "enabled": false,
+          "url": "/hdri/studio_small_09.hdr",
+          "mapping": "EquirectangularReflectionMapping",
+          "intensity": 1.2,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "background": false,
+          "blur": 0,
+          "lod": 0
+        },
+        "fog": {
+          "enabled": false,
+          "type": "linear",
+          "color": "#ffffff",
+          "near": 10,
+          "far": 100
+        }
+      },
+      "lighting": {
+        "ambient": {
+          "enabled": true,
+          "intensity": 0.6,
+          "color": "#ffffff"
+        },
+        "hemisphere": {
+          "enabled": false,
+          "skyColor": "#ffffff",
+          "groundColor": "#444444",
+          "intensity": 0.5
+        },
+        "directional": {
+          "enabled": true,
+          "sceneHelper": true,
+          "castShadow": true,
+          "shadowIntensity": 1,
+          "color": "#ffffff",
+          "intensity": 2,
+          "position": [
+            5,
+            10,
+            5
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ]
+        },
+        "directionalLights": [],
+        "shadows": {
+          "enabled": true,
+          "mapSize": [
+            2048,
+            2048
+          ],
+          "bias": -0.00005,
+          "normalBias": 0.06,
+          "radius": 8,
+          "blurSamples": 16,
+          "camera": {
+            "near": 0.5,
+            "far": 50,
+            "left": -6,
+            "right": 6,
+            "top": 6,
+            "bottom": -6
+          }
+        },
+        "pointLights": [],
+        "spotLights": []
+      },
+      "ground": {
+        "enabled": false,
+        "type": "shadowReceiver",
+        "size": 20,
+        "material": {
+          "color": "#ffffff",
+          "opacity": 0.4,
+          "roughness": 1
+        }
+      },
+      "renderer": {
+        "physicallyCorrectLights": true,
+        "toneMapping": "ACESFilmicToneMapping",
+        "toneMappingExposure": 1.2,
+        "outputColorSpace": "SRGBColorSpace",
+        "shadowMap": {
+          "enabled": true,
+          "type": "VSMShadowMap"
+        },
+        "antialias": true
+      },
+      "postprocessing": {
+        "enabled": false,
+        "bloom": {
+          "enabled": false,
+          "strength": 0.5,
+          "radius": 0.4,
+          "threshold": 0.8
+        },
+        "ssao": {
+          "enabled": false,
+          "radius": 0.5,
+          "intensity": 10,
+          "luminanceInfluence": 0.6
+        },
+        "colorGrading": {
+          "enabled": false,
+          "contrast": 1,
+          "saturation": 1,
+          "brightness": 1
+        },
+        "vignette": {
+          "enabled": false,
+          "offset": 0.5,
+          "darkness": 0.5
+        }
+      },
+      "camera": {
+        "position": [
+          0,
+          0,
+          6
+        ],
+        "fov": 50,
+        "near": 0.1,
+        "far": 1000
+      },
+      "controls": {
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "lookTarget": [
+          0,
+          0,
+          0
+        ],
+        "minDistance": 0,
+        "maxDistance": 10,
+        "dampingFactor": 0.05,
+        "enableDamping": true,
+        "enablePan": true,
+        "enableZoom": true,
+        "enableRotate": true
+      }
+    }
+  }
+}

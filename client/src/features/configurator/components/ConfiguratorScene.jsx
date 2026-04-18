@@ -1,12 +1,16 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 import { Environment, OrbitControls } from '@react-three/drei';
 import { ConfiguratorModel } from './ConfiguratorModel.jsx';
 import { PanelLabLightHelpers } from './PanelLabLightHelpers.jsx';
+import { PanelLabCameraOrbitHelpers } from './PanelLabCameraOrbitHelpers.jsx';
+import { CameraPositionHud } from './CameraPositionHud.jsx';
 import { useLabKeyFromLocation } from './panelLab/useLabKeyFromLocation.js';
 import { useViewerSettingsStore } from '../../../shared/scene/viewerSettingsStore.js';
 import { PanelLabGLSync } from './PanelLabGLSync.jsx';
 import { PanelLabPostFx } from './PanelLabPostFx.jsx';
+import { ConfiguratorAnnotations } from './ConfiguratorAnnotations.jsx';
 import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
 
 const DEF_DIR = DEFAULT_PANEL_LAB.lighting.directional;
@@ -68,7 +72,7 @@ function syncLightTarget(light, target) {
 export function ConfiguratorScene({ modelKey, requestId }) {
   const panelLab = useViewerSettingsStore((s) => s.panelLab);
   const labKey = useLabKeyFromLocation();
-  const { environment, lighting, ground, renderer, postprocessing, camera, controls } = panelLab;
+  const { environment, lighting, ground, renderer, postprocessing, camera, controls, annotations } = panelLab;
 
   const { camera: threeCamera } = useThree();
   const dirLightRef = useRef(null);
@@ -96,6 +100,13 @@ export function ConfiguratorScene({ modelKey, requestId }) {
   const camNear = camera?.near;
   const camFar = camera?.far;
 
+  const orbitTx = controls?.target?.[0];
+  const orbitTy = controls?.target?.[1];
+  const orbitTz = controls?.target?.[2];
+
+  const orbitControlsRef = useRef(null);
+  const lookAtVec = useMemo(() => new THREE.Vector3(), []);
+
   useEffect(() => {
     if (!threeCamera) return;
 
@@ -111,6 +122,36 @@ export function ConfiguratorScene({ modelKey, requestId }) {
     threeCamera.updateProjectionMatrix();
     /* eslint-enable react-hooks/immutability */
   }, [threeCamera, camPx, camPy, camPz, camFov, camNear, camFar]);
+
+  useLayoutEffect(() => {
+    const oc = orbitControlsRef.current;
+    if (!oc) return;
+    const t = controls?.target;
+    const raw = Array.isArray(t) ? t : DEFAULT_PANEL_LAB.controls.target;
+    const x = Number(raw[0]);
+    const y = Number(raw[1]);
+    const z = Number(raw[2]);
+    oc.target.set(
+      Number.isFinite(x) ? x : 0,
+      Number.isFinite(y) ? y : 0,
+      Number.isFinite(z) ? z : 0,
+    );
+    oc.update();
+  }, [orbitTx, orbitTy, orbitTz]);
+
+  /** After OrbitControls moves the camera, aim at Panel Lab look-at (independent of orbit pivot). */
+  useFrame(() => {
+    if (!threeCamera) return;
+    const raw = controls?.lookTarget;
+    const arr = Array.isArray(raw) ? raw : DEFAULT_PANEL_LAB.controls.lookTarget;
+    const x = Number(arr[0]);
+    const y = Number(arr[1]);
+    const z = Number(arr[2]);
+    if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z)) {
+      lookAtVec.set(x, y, z);
+      threeCamera.lookAt(lookAtVec);
+    }
+  }, -1);
 
   const shadowMapEnabled = !!renderer?.shadowMap?.enabled;
   const shadowMapType = renderer?.shadowMap?.type;
@@ -128,7 +169,13 @@ export function ConfiguratorScene({ modelKey, requestId }) {
     syncLightTarget(L, Array.isArray(dir?.target) ? dir.target : DEF_DIR.target);
 
     L.shadow.needsUpdate = true;
-  }, [lighting?.directional, globalShadows, shadowMapEnabled, shadowMapType]);
+  }, [
+    lighting?.directional,
+    lighting?.directional?.enabled,
+    globalShadows,
+    shadowMapEnabled,
+    shadowMapType,
+  ]);
 
   const fog = environment?.fog;
   const directionalLights = lighting?.directionalLights ?? [];
@@ -177,7 +224,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
       applySpotOrPointShadowCamera(light, globalShadows);
       light.shadow.needsUpdate = true;
     });
-  }, [directionalLights, pointLights, spotLights, globalShadows, shadowMapEnabled]);
+  }, [directionalLights, pointLights, spotLights, globalShadows, shadowMapEnabled, shadowMapType]);
 
   return (
     <>
@@ -265,7 +312,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
             position={pl.position ?? [0, 0, 0]}
             distance={pl.distance}
             decay={pl.decay}
-            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && !!pl.castShadow}
+            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && pl.castShadow !== false}
           />
         ) : null,
       )}
@@ -284,7 +331,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
             penumbra={sl.penumbra ?? 0}
             distance={sl.distance}
             decay={sl.decay}
-            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && !!sl.castShadow}
+            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && sl.castShadow !== false}
             onUpdate={(light) => {
               syncLightTarget(light, Array.isArray(sl.target) ? sl.target : [0, 0, 0]);
             }}
@@ -293,6 +340,8 @@ export function ConfiguratorScene({ modelKey, requestId }) {
       )}
 
       {labKey ? <PanelLabLightHelpers lighting={lighting} /> : null}
+      {labKey ? <PanelLabCameraOrbitHelpers /> : null}
+      {labKey ? <CameraPositionHud /> : null}
 
       {ground?.enabled ? (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -310,14 +359,60 @@ export function ConfiguratorScene({ modelKey, requestId }) {
         <ConfiguratorModel key={`${modelKey}:${requestId}`} modelKey={modelKey} requestId={requestId} />
       </Suspense>
 
+      <ConfiguratorAnnotations annotations={annotations} />
+
       <OrbitControls
+        ref={orbitControlsRef}
         enableDamping={controls.enableDamping}
         enablePan={controls.enablePan}
         enableZoom={controls.enableZoom}
         enableRotate={controls.enableRotate}
         dampingFactor={controls.dampingFactor}
-        minDistance={controls.minDistance}
-        maxDistance={controls.maxDistance}
+        rotateSpeed={
+          typeof controls?.rotateSpeed === 'number' && Number.isFinite(controls.rotateSpeed)
+            ? controls.rotateSpeed
+            : DEFAULT_PANEL_LAB.controls.rotateSpeed
+        }
+        zoomSpeed={
+          typeof controls?.zoomSpeed === 'number' && Number.isFinite(controls.zoomSpeed)
+            ? controls.zoomSpeed
+            : DEFAULT_PANEL_LAB.controls.zoomSpeed
+        }
+        panSpeed={
+          typeof controls?.panSpeed === 'number' && Number.isFinite(controls.panSpeed)
+            ? controls.panSpeed
+            : DEFAULT_PANEL_LAB.controls.panSpeed
+        }
+        minDistance={
+          typeof controls?.minDistance === 'number' && Number.isFinite(controls.minDistance) && controls.minDistance >= 0
+            ? controls.minDistance
+            : DEFAULT_PANEL_LAB.controls.minDistance
+        }
+        maxDistance={
+          typeof controls?.maxDistance === 'number' && Number.isFinite(controls.maxDistance) && controls.maxDistance > 0
+            ? controls.maxDistance
+            : DEFAULT_PANEL_LAB.controls.maxDistance
+        }
+        minPolarAngle={
+          typeof controls?.minPolarAngle === 'number' && Number.isFinite(controls.minPolarAngle)
+            ? controls.minPolarAngle
+            : DEFAULT_PANEL_LAB.controls.minPolarAngle
+        }
+        maxPolarAngle={
+          typeof controls?.maxPolarAngle === 'number' && Number.isFinite(controls.maxPolarAngle)
+            ? controls.maxPolarAngle
+            : DEFAULT_PANEL_LAB.controls.maxPolarAngle
+        }
+        minAzimuthAngle={
+          typeof controls?.minAzimuthAngle === 'number' && Number.isFinite(controls.minAzimuthAngle)
+            ? controls.minAzimuthAngle
+            : DEFAULT_PANEL_LAB.controls.minAzimuthAngle
+        }
+        maxAzimuthAngle={
+          typeof controls?.maxAzimuthAngle === 'number' && Number.isFinite(controls.maxAzimuthAngle)
+            ? controls.maxAzimuthAngle
+            : DEFAULT_PANEL_LAB.controls.maxAzimuthAngle
+        }
       />
 
       <PanelLabPostFx postprocessing={postprocessing} />
