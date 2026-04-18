@@ -15,6 +15,7 @@ import { PanelLabRendererSection } from './PanelLabRendererSection.jsx';
 import { PanelLabPostSection } from './PanelLabPostSection.jsx';
 import { PanelLabOrbitSection } from './PanelLabOrbitSection.jsx';
 import { PanelLabCameraSection } from './PanelLabCameraSection.jsx';
+import { PanelLabAnnotationsSection } from './PanelLabAnnotationsSection.jsx';
 
 export function PanelLabPanelBody({
   labKey,
@@ -26,6 +27,7 @@ export function PanelLabPanelBody({
   patchPostprocessing,
   patchCamera,
   patchControls,
+  patchAnnotations,
   onResetToDefaults,
 }) {
   return (
@@ -77,6 +79,12 @@ export function PanelLabPanelBody({
         </PanelLabCollapsibleSection>
         <PanelLabCollapsibleSection title="Controls (Orbit)" defaultOpen={false}>
           <PanelLabOrbitSection controls={panelLab.controls} patchControls={patchControls} />
+        </PanelLabCollapsibleSection>
+        <PanelLabCollapsibleSection title="Annotations" defaultOpen={false}>
+          <PanelLabAnnotationsSection
+            annotations={panelLab.annotations}
+            patchAnnotations={patchAnnotations}
+          />
         </PanelLabCollapsibleSection>
       </div>
     </div>

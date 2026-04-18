@@ -36,10 +36,10 @@ export function ConfiguratorModel({ modelKey, requestId }) {
         ? pl.lighting.directionalLights.some((l) => l && l.enabled !== false && l.castShadow !== false)
         : false;
       const pointCasts = Array.isArray(pl.lighting?.pointLights)
-        ? pl.lighting.pointLights.some((l) => l && l.enabled !== false && !!l.castShadow)
+        ? pl.lighting.pointLights.some((l) => l && l.enabled !== false && l.castShadow !== false)
         : false;
       const spotCasts = Array.isArray(pl.lighting?.spotLights)
-        ? pl.lighting.spotLights.some((l) => l && l.enabled !== false && !!l.castShadow)
+        ? pl.lighting.spotLights.some((l) => l && l.enabled !== false && l.castShadow !== false)
         : false;
       return (
         !!pl.renderer?.shadowMap?.enabled &&

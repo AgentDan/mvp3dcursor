@@ -1,5 +1,8 @@
 export const PANEL_LAB_VERSION = 1;
 
+/** Hard cap on annotation count (panel + glTF). */
+export const ANNOTATIONS_MAX_ITEMS = 10;
+
 function isPlainObject(v) {
   return v != null && typeof v === 'object' && !Array.isArray(v);
 }
@@ -69,7 +72,8 @@ export const DEFAULT_PANEL_LAB = {
       enabled: false,
       /** Viewport overlay in Lab (position → target). */
       sceneHelper: false,
-      castShadow: false,
+      /** When light + global shadows are on, meshes cast without an extra Panel Lab click. */
+      castShadow: true,
       shadowIntensity: 1,
       color: '#ffffff',
       intensity: 2,
@@ -182,6 +186,20 @@ export const DEFAULT_PANEL_LAB = {
     minAzimuthAngle: -Math.PI * 2,
     maxAzimuthAngle: Math.PI * 2,
   },
+
+  annotations: {
+    enabled: false,
+    items: [
+      {
+        id: 'ann-0',
+        label: '',
+        /** Markdown body (react-markdown in viewer). */
+        text: '',
+        position: [0, 0, 0],
+        visible: true,
+      },
+    ],
+  },
 };
 
 export function cloneDefaultPanelLab() {
@@ -278,7 +296,7 @@ export function normalizePanelLabToEmbedded(raw) {
       isPlainObject(pl)
         ? {
             ...pl,
-            castShadow: typeof pl.castShadow === 'boolean' ? pl.castShadow : false,
+            castShadow: typeof pl.castShadow === 'boolean' ? pl.castShadow : true,
             shadowIntensity: Number.isFinite(Number(pl.shadowIntensity))
               ? Math.max(0, Math.min(1, Number(pl.shadowIntensity)))
               : 1,
@@ -291,7 +309,7 @@ export function normalizePanelLabToEmbedded(raw) {
       isPlainObject(sl)
         ? {
             ...sl,
-            castShadow: typeof sl.castShadow === 'boolean' ? sl.castShadow : false,
+            castShadow: typeof sl.castShadow === 'boolean' ? sl.castShadow : true,
             shadowIntensity: Number.isFinite(Number(sl.shadowIntensity))
               ? Math.max(0, Math.min(1, Number(sl.shadowIntensity)))
               : 1,
@@ -359,6 +377,41 @@ export function normalizePanelLabToEmbedded(raw) {
     } = merged.controls;
     merged.controls = restControls;
   }
+
+  const defAnn = defaults.annotations;
+  if (!isPlainObject(merged.annotations)) {
+    merged.annotations = JSON.parse(JSON.stringify(defAnn));
+  } else {
+    merged.annotations.enabled = merged.annotations.enabled === true;
+    const template = defAnn.items[0];
+    const rawItems = Array.isArray(merged.annotations.items) ? merged.annotations.items : [];
+    const capped = rawItems.slice(0, ANNOTATIONS_MAX_ITEMS);
+    const normalizedItems = capped.map((it, idx) => {
+      const o = isPlainObject(it) ? { ...template, ...it } : { ...template };
+      const pos = Array.isArray(o.position) ? o.position.map((n) => Number(n) || 0) : [0, 0, 0];
+      o.position = pos.slice(0, 3);
+      if (o.position.length < 3) {
+        while (o.position.length < 3) o.position.push(0);
+      }
+      o.id = typeof o.id === 'string' && o.id.trim() ? o.id.trim() : `ann-${idx}`;
+      o.label = typeof o.label === 'string' ? o.label : '';
+      o.text = typeof o.text === 'string' ? o.text : '';
+      o.visible = o.visible !== false;
+      return o;
+    });
+    merged.annotations.items =
+      normalizedItems.length > 0 ? normalizedItems : JSON.parse(JSON.stringify(defAnn.items));
+    const seenIds = new Set();
+    merged.annotations.items = merged.annotations.items.map((o, idx) => {
+      let id = o.id;
+      if (seenIds.has(id)) {
+        id = `ann-${idx}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+      seenIds.add(id);
+      return { ...o, id };
+    });
+  }
+
   finalizeCameraOrbit(merged);
   return merged;
 }

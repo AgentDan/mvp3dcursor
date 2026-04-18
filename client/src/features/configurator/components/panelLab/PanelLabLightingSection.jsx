@@ -33,7 +33,7 @@ const DEF_POINT = {
   position: [0, 3, 0],
   distance: 0,
   decay: 2,
-  castShadow: false,
+  castShadow: true,
   shadowIntensity: 1,
 };
 const DEF_SPOT = {
@@ -48,7 +48,7 @@ const DEF_SPOT = {
   penumbra: 0,
   distance: 0,
   decay: 2,
-  castShadow: false,
+  castShadow: true,
   shadowIntensity: 1,
 };
 

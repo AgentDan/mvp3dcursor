@@ -31,6 +31,7 @@ export const useViewerSettingsStore = create((set) => ({
   patchPostprocessing: (partial) => patchTopSection(set, 'postprocessing', partial),
   patchCamera: (partial) => patchTopSection(set, 'camera', partial),
   patchControls: (partial) => patchTopSection(set, 'controls', partial),
+  patchAnnotations: (partial) => patchTopSection(set, 'annotations', partial),
 
   resetToDefaults: () => set(() => ({ panelLab: cloneDefaultPanelLab() })),
 

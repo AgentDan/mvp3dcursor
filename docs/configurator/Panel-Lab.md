@@ -164,6 +164,21 @@
 
 Подсказка в UI про **PCFSoft** в Three r182 и кнопка переключения рендерера на **VSM** — см. `PanelLabShadowsSection.jsx`.
 
+### Тени в рантайме (аудит)
+
+**Отражения ≠ карты теней.** Отражения в глянце и HDRI (`Environment`) — это окружение/зонды; **динамические тени** — отдельный проход shadow map. В глянцевом материале может быть сильный зеркальный блик от HDRI при этом тени на диффузной части всё равно видны.
+
+**Общая цепочка (все типы света):**
+
+1. **Renderer → Shadow map** (`renderer.shadowMap.enabled`) — иначе `Canvas`/`WebGLRenderer` не держит shadow map включённым согласованно с R3F.
+2. **Lighting → Shadows → Enabled** (`lighting.shadows.enabled`).
+3. Хотя бы один источник с **включённым** светом и **`castShadow !== false`** (directional / extra directional / point / spot).
+4. На мешах модели выставляются **`castShadow` / `receiveShadow`** через `ConfiguratorModel.jsx`, когда выполнены п.1–3 (`meshShadowsOn`).
+
+**Directional:** теневая «камера» — ортогональная; поля **`lighting.shadows.camera.*`** задают frustum. **Spot:** перспективная теневая камера привязана к углу конуса; из Panel Lab на неё явно пробрасываются в основном **near** и **far** из того же блока `lighting.shadows.camera` — если тень «обрезается», увеличьте **far**. **Point:** кубические shadow maps (дороже по GPU).
+
+**Исправление несогласованности spot/point (раньше):** для point/spot использовалось **`!!castShadow`** и дефолт **`false`**, из‑за чего при включённых глобальных тенях меши не получали `castShadow`, хотя свет мог казаться включённым. Сейчас логика как у directional: **`castShadow !== false`**, дефолты для новых point/spot и нормализация glTF — **каст включён по умолчанию**, снять можно чекбоксом «Casts shadows».
+
 ---
 
 ## 8. Ground
@@ -290,6 +305,8 @@
 
 ## 15. Идеи расширения (ещё не в проекте)
 
+**Аннотации в конфигураторе** — `panelLab.annotations` (Markdown, billboard «i», max 10): [Annotations.md](./Annotations.md).
+
 **OrbitControls (Three.js)** — можно добавить в схему и в `ConfiguratorScene`:
 
 - `rotateSpeed`, `zoomSpeed`, `panSpeed`
@@ -319,6 +336,7 @@
 | Постэффекты | `client/src/features/configurator/components/PanelLabPostFx.jsx` |
 | Разметка секций панели | `client/src/features/configurator/components/panelLab/PanelLabPanelBody.jsx` |
 | Секции по файлам | `client/src/features/configurator/components/panelLab/*.jsx` |
+| Аннотации (сцена) | `client/src/features/configurator/components/ConfiguratorAnnotations.jsx` |
 
 ---
 

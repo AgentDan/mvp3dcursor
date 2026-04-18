@@ -10,6 +10,7 @@ import { useLabKeyFromLocation } from './panelLab/useLabKeyFromLocation.js';
 import { useViewerSettingsStore } from '../../../shared/scene/viewerSettingsStore.js';
 import { PanelLabGLSync } from './PanelLabGLSync.jsx';
 import { PanelLabPostFx } from './PanelLabPostFx.jsx';
+import { ConfiguratorAnnotations } from './ConfiguratorAnnotations.jsx';
 import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
 
 const DEF_DIR = DEFAULT_PANEL_LAB.lighting.directional;
@@ -71,7 +72,7 @@ function syncLightTarget(light, target) {
 export function ConfiguratorScene({ modelKey, requestId }) {
   const panelLab = useViewerSettingsStore((s) => s.panelLab);
   const labKey = useLabKeyFromLocation();
-  const { environment, lighting, ground, renderer, postprocessing, camera, controls } = panelLab;
+  const { environment, lighting, ground, renderer, postprocessing, camera, controls, annotations } = panelLab;
 
   const { camera: threeCamera } = useThree();
   const dirLightRef = useRef(null);
@@ -168,7 +169,13 @@ export function ConfiguratorScene({ modelKey, requestId }) {
     syncLightTarget(L, Array.isArray(dir?.target) ? dir.target : DEF_DIR.target);
 
     L.shadow.needsUpdate = true;
-  }, [lighting?.directional, globalShadows, shadowMapEnabled, shadowMapType]);
+  }, [
+    lighting?.directional,
+    lighting?.directional?.enabled,
+    globalShadows,
+    shadowMapEnabled,
+    shadowMapType,
+  ]);
 
   const fog = environment?.fog;
   const directionalLights = lighting?.directionalLights ?? [];
@@ -217,7 +224,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
       applySpotOrPointShadowCamera(light, globalShadows);
       light.shadow.needsUpdate = true;
     });
-  }, [directionalLights, pointLights, spotLights, globalShadows, shadowMapEnabled]);
+  }, [directionalLights, pointLights, spotLights, globalShadows, shadowMapEnabled, shadowMapType]);
 
   return (
     <>
@@ -305,7 +312,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
             position={pl.position ?? [0, 0, 0]}
             distance={pl.distance}
             decay={pl.decay}
-            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && !!pl.castShadow}
+            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && pl.castShadow !== false}
           />
         ) : null,
       )}
@@ -324,7 +331,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
             penumbra={sl.penumbra ?? 0}
             distance={sl.distance}
             decay={sl.decay}
-            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && !!sl.castShadow}
+            castShadow={!!globalShadows?.enabled && !!renderer?.shadowMap?.enabled && sl.castShadow !== false}
             onUpdate={(light) => {
               syncLightTarget(light, Array.isArray(sl.target) ? sl.target : [0, 0, 0]);
             }}
@@ -351,6 +358,8 @@ export function ConfiguratorScene({ modelKey, requestId }) {
       <Suspense fallback={<group />}>
         <ConfiguratorModel key={`${modelKey}:${requestId}`} modelKey={modelKey} requestId={requestId} />
       </Suspense>
+
+      <ConfiguratorAnnotations annotations={annotations} />
 
       <OrbitControls
         ref={orbitControlsRef}

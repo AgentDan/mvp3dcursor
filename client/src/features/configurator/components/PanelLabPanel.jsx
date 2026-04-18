@@ -21,6 +21,7 @@ export function PanelLabPanel() {
       patchPostprocessing: s.patchPostprocessing,
       patchCamera: s.patchCamera,
       patchControls: s.patchControls,
+      patchAnnotations: s.patchAnnotations,
     })),
   );
   const resetToDefaults = useViewerSettingsStore((s) => s.resetToDefaults);
