@@ -13,6 +13,7 @@ export function PanelLabGLSync({ renderer }) {
   useLayoutEffect(() => {
     if (!renderer || !gl) return;
 
+    /* eslint-disable react-hooks/immutability -- R3F WebGLRenderer is configured by mutating gl */
     gl.toneMapping = resolveToneMapping(renderer.toneMapping);
     gl.toneMappingExposure = Number(renderer.toneMappingExposure) || 1;
     gl.outputColorSpace = resolveOutputColorSpace(renderer.outputColorSpace);
@@ -32,6 +33,7 @@ export function PanelLabGLSync({ renderer }) {
     if (sm?.enabled) {
       gl.shadowMap.needsUpdate = true;
     }
+    /* eslint-enable react-hooks/immutability */
     invalidate();
   }, [gl, invalidate, renderer]);
 

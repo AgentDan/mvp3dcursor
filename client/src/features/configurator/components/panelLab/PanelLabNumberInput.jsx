@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 function formatDisplayValue(value, integer) {
   if (value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))) {
@@ -18,12 +18,7 @@ function parseNumber(raw, integer) {
 export function PanelLabNumberInput({ label, value, onChange, min, max, step = 0.1, integer = false }) {
   const [focused, setFocused] = useState(false);
   const [text, setText] = useState(() => formatDisplayValue(value, integer));
-
-  useEffect(() => {
-    if (!focused) {
-      setText(formatDisplayValue(value, integer));
-    }
-  }, [value, integer, focused]);
+  const displayValue = focused ? text : formatDisplayValue(value, integer);
 
   const clamp = (v) => {
     let x = v;
@@ -38,8 +33,11 @@ export function PanelLabNumberInput({ label, value, onChange, min, max, step = 0
       <input
         type="number"
         step={step}
-        value={text}
-        onFocus={() => setFocused(true)}
+        value={displayValue}
+        onFocus={() => {
+          setText(formatDisplayValue(value, integer));
+          setFocused(true);
+        }}
         onChange={(e) => {
           const raw = e.target.value;
           setText(raw);

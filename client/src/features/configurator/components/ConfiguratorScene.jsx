@@ -15,6 +15,8 @@ import { DEFAULT_PANEL_LAB } from '@repo/panelLabSchema';
 
 const DEF_DIR = DEFAULT_PANEL_LAB.lighting.directional;
 const DEF_SHADOW = DEFAULT_PANEL_LAB.lighting.shadows;
+/** Stable fallback so `?? []` does not allocate a new array every render (exhaustive-deps / referential stability). */
+const EMPTY_LIGHT_LIST = [];
 
 function applyCommonShadow(light, shadows, lightType = 'directional') {
   if (!light?.shadow || !shadows) return;
@@ -110,7 +112,6 @@ export function ConfiguratorScene({ modelKey, requestId }) {
   useEffect(() => {
     if (!threeCamera) return;
 
-    /* eslint-disable react-hooks/immutability -- sync default camera from Panel Lab store */
     if (typeof camPx === 'number' && typeof camPy === 'number' && typeof camPz === 'number') {
       threeCamera.position.set(camPx, camPy, camPz);
     }
@@ -120,7 +121,6 @@ export function ConfiguratorScene({ modelKey, requestId }) {
     if (typeof camFar === 'number') threeCamera.far = camFar;
 
     threeCamera.updateProjectionMatrix();
-    /* eslint-enable react-hooks/immutability */
   }, [threeCamera, camPx, camPy, camPz, camFov, camNear, camFar]);
 
   useLayoutEffect(() => {
@@ -137,6 +137,7 @@ export function ConfiguratorScene({ modelKey, requestId }) {
       Number.isFinite(z) ? z : 0,
     );
     oc.update();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use numeric orbitTx/Ty/Tz; `controls.target` often gets a fresh array ref on unrelated Panel Lab patches
   }, [orbitTx, orbitTy, orbitTz]);
 
   /** After OrbitControls moves the camera, aim at Panel Lab look-at (independent of orbit pivot). */
@@ -178,9 +179,9 @@ export function ConfiguratorScene({ modelKey, requestId }) {
   ]);
 
   const fog = environment?.fog;
-  const directionalLights = lighting?.directionalLights ?? [];
-  const pointLights = lighting?.pointLights ?? [];
-  const spotLights = lighting?.spotLights ?? [];
+  const directionalLights = lighting?.directionalLights ?? EMPTY_LIGHT_LIST;
+  const pointLights = lighting?.pointLights ?? EMPTY_LIGHT_LIST;
+  const spotLights = lighting?.spotLights ?? EMPTY_LIGHT_LIST;
 
   useLayoutEffect(() => {
     syncLightTarget(
