@@ -27,7 +27,7 @@ function PanelLabDeleteIconButton({ onClick, className = '' }) {
 const DEF_POINT = {
   name: '',
   enabled: false,
-  sceneHelper: true,
+  sceneHelper: false,
   color: '#ffffff',
   intensity: 1,
   position: [0, 3, 0],
@@ -61,7 +61,7 @@ function PanelLabLightSubEntity({
   onNameChange,
   onEnabledChange,
   onDelete,
-  sceneHelper = true,
+  sceneHelper = false,
   onSceneHelperChange,
   children,
 }) {

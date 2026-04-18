@@ -23,6 +23,15 @@ export function PanelLabPanel() {
       patchControls: s.patchControls,
     })),
   );
+  const resetToDefaults = useViewerSettingsStore((s) => s.resetToDefaults);
+
+  const handleResetToDefaults = () => {
+    resetToDefaults();
+    setStatus({
+      type: 'success',
+      message: 'Panel Lab reset to schema defaults (in memory). Save to S3 to update the glTF extras.',
+    });
+  };
 
   if (!labKey) {
     return null;
@@ -108,7 +117,7 @@ export function PanelLabPanel() {
 
       {panelExpanded ? (
         <>
-          <PanelLabPanelBody labKey={labKey} {...labSlice} />
+          <PanelLabPanelBody labKey={labKey} {...labSlice} onResetToDefaults={handleResetToDefaults} />
           <PanelLabSaveSection labKey={labKey} isSaving={isSaving} onSave={handleSave} status={status} />
         </>
       ) : null}

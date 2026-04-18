@@ -26,11 +26,12 @@ export function PanelLabPanelBody({
   patchPostprocessing,
   patchCamera,
   patchControls,
+  onResetToDefaults,
 }) {
   return (
     <div id="panel-lab-panel-body" className="flex min-w-0 flex-col gap-3 text-xs">
       <PanelLabIntro />
-      <PanelLabKeyBadge labKey={labKey} />
+      <PanelLabKeyBadge labKey={labKey} onResetClick={onResetToDefaults} />
 
       <div className="flex flex-col gap-2">
         <PanelLabCollapsibleSection title="Environment" defaultOpen={false}>
