@@ -15,9 +15,9 @@ const navLink =
   'text-sm text-gray-800 hover:text-gray-950 transition-colors';
 const navMuted = 'text-sm text-gray-800';
 
-/** Over full-viewport 3D: blur + translucency, light nav text. */
+/** Over full-viewport 3D / long home scroll: fixed glass bar, light nav text. */
 const overlayBar =
-  'absolute top-0 left-0 right-0 z-40 pointer-events-auto ' +
+  'fixed top-0 left-0 right-0 z-50 pointer-events-auto ' +
   'bg-gray-400/25 backdrop-blur-md backdrop-saturate-150 ' +
   'supports-[backdrop-filter]:bg-gray-400/20 border-b border-white/15';
 const overlayNavLink =
@@ -127,7 +127,11 @@ export function MainHeader({ overlay = false }) {
     : 'text-xl font-semibold text-center flex-1 min-w-0 truncate px-2 text-gray-950';
 
   return (
-    <header className={`px-4 py-4 flex items-center justify-between ${bar}`}>
+    <header
+      className={`px-4 py-4 flex items-center justify-between ${bar} ${
+        overlay ? '' : 'relative z-50 shrink-0'
+      }`}
+    >
       <div className="flex items-center gap-4">
         <Link
           to="/"
